@@ -13,6 +13,18 @@ def start(bot, update):
                      text="Please, use /token command to set up your token")
 
 
+def has_token(func):
+    def func_wrapper(**args):
+        connector = database.Connector()
+        user = connector.get_user_by_chat_id(args['update'].message.chat_id)
+        if user is None:
+            args['bot'].send_message(chat_id=args['update'].message.chat_id, text='Set up your token first')
+            return
+        func(**args)
+
+    return func_wrapper
+
+
 def set_token(bot, update, args):
     if len(args) != 1:
         bot.send_message(chat_id=update.message.chat_id, text="Use /token <your TimePad token>")
@@ -31,13 +43,15 @@ def set_token(bot, update, args):
 
     connector = database.Connector()
     last_timestamp = 0
-    connector.add_user(data['user_id'], update.message.chat_id, data['user_email'], token, last_timestamp)
+    connector.add_user(data['user_id'], update.message.chat_id, update.message.from_user.username,
+                       data['user_email'], token, last_timestamp)
     bot.send_message(chat_id=update.message.chat_id, text='Connected!')
 
 
 def get_today_events(bot, update):
     events = timepad.get_events_by_date()
     bot.send_message(chat_id=update.message.chat_id, text="\n\n".join(events))
+
 
 def echo(bot, update):
     bot.send_message(chat_id=update.message.chat_id, text=update.message.text)
@@ -68,12 +82,30 @@ def crawl_new_events(bot, job):
     if len(new_events) > 0:
         notify_subscribers(bot, user['id'])
 
+@has_token
 def get_top_events(bot, update, args):
     keywords = ','.join(args)
-    #top_events = timepad.get_top_events(keywords)
+    # top_events = timepad.get_top_events(keywords)
     top_events = []
     bot.send_message(chat_id=update.message.chat_id,
                      text='Here is your top: {}'.format('. '.join(top_events)))
+
+
+@has_token
+def subscribe(bot, update, users):
+    connector = database.Connector()
+    if len(users) != 1:
+        bot.send_message(chat_id=update.message.chat_id,
+                         text='Use /subscribe <Telegram login>')
+        return
+    subscribed_to = users[0]
+    user_id = connector.get_user_by_chat_id(update.message.chat_id)
+    subscribed_id = connector.get_user_by_telegram(subscribed_to)
+    if subscribed_id is None:
+        bot.send_message(chat_id=update.message.chat_id, text='Unknown user! Ask him to add this bot')
+    connector.add_subscription(subscribed_to, user_id)
+    bot.send_message(chat_id=update.message.chat_id, text='Subscriber!')
+
 
 if __name__ == '__main__':
     updater = Updater(token='474743017:AAGBMDsYi0LciJFLT2HB9YOVABV1atOoboM')
