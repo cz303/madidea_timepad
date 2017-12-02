@@ -63,7 +63,7 @@ class Connector:
 
     def set_timepad_data_for_chat_id(self, chat_id, timepad_id, email, token, city, last_timestamp):
         c = self.connection.cursor()
-        c.execute('UPDATE users SET timepadId = ?, email = ?, token = ?, city = ?, last_timestamp = ? '
+        c.execute('UPDATE users SET timepadId = ?, email = ?, token = ?, cityName = ?, last_timestamp = ? '
                   'WHERE chatId = ?', (timepad_id, email, token, city, last_timestamp, chat_id))
 
     def get_user_by_telegram(self, login):
