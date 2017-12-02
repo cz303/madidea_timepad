@@ -1,12 +1,16 @@
 import logging
-from telegram.ext import Updater, CommandHandler, MessageHandler, Filters
+from telegram.ext import Updater, CommandHandler, MessageHandler, CallbackQueryHandler, Filters
 import timepad
 import database
 from datetime import datetime
+import telegram
 
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
                     level=logging.INFO)
 
+MAX_EVENTS_IN_MSG = 4
+
+user_last_queries = {}
 
 def start(bot, update):
     connector = database.Connector()
@@ -58,10 +62,28 @@ def set_token(bot, update, args):
 
 
 def get_today_events(bot, update):
+    try:
+        min_index, date = user_last_queries[update.message.chat_id]
+    except KeyError:
+        min_index, date = 0, datetime.today().strftime('%Y-%m-%d')
+        user_last_queries[update.message.chat_id] = (min_index, date)
+
     connector = database.Connector()
     city = connector.get_city(timepad.TIMEPAD_TOKEN)  # FIXIT
-    events = timepad.get_events_by_date(city)
-    bot.send_message(chat_id=update.message.chat_id, text="\n\n".join(events))
+    events = timepad.get_events_by_date(min_index, date, city)
+    if len(events) - min_index > MAX_EVENTS_IN_MSG:
+        kb = [[ telegram.InlineKeyboardButton("Да, ещё!", callback_data="ещё") ]]
+        kb_markup = telegram.InlineKeyboardMarkup(kb)
+        bot.send_message(chat_id=update.message.chat_id, text="\n\n".join(events[:MAX_EVENTS_IN_MSG]), parse_mode='Markdown')
+        left = len(events) - MAX_EVENTS_IN_MSG - min_index
+        text = "Мы показали не все события по этому запросу. Осталось {}. Показать ещё {}?".format(left, min(left, MAX_EVENTS_IN_MSG))
+        bot.send_message(chat_id=update.message.chat_id,
+                         text=text,
+                         reply_markup=kb_markup)
+        user_last_queries[update.message.chat_id] = (min_index + MAX_EVENTS_IN_MSG, date)
+    else:
+        bot.send_message(chat_id=update.message.chat_id, text="\n\n".join(events[min_index:]), parse_mode='Markdown')
+        user_last_queries.pop(update.message.chat_id, None)
 
 
 @has_token
@@ -167,6 +189,15 @@ def subscribe(bot, update, args):
     bot.send_message(chat_id=update.message.chat_id, text='Подписано')
 
 
+def button_more_callback(bot, update):
+    query = update.callback_query
+    if "ещё" not in query.data:
+        pass
+        print(query.data)
+    else:
+        update.message = query.message
+        get_today_events(bot, update)
+
 def unsubscribe(bot, update, args):
     connector = database.Connector()
     if len(args) != 1:
@@ -194,6 +225,7 @@ def show_subscriptions_handler(bot, update):
 
 def show_help(bot, update):
     bot.send_message(chat_id=update.message.chat_id, text='Иди на хуй пока что')
+
 
 if __name__ == '__main__':
     with open('telegram.token', 'r') as tg:
@@ -237,6 +269,8 @@ if __name__ == '__main__':
 
     subscribe_handler = CommandHandler('subscribe', subscribe, pass_args=True)
     dispatcher.add_handler(subscribe_handler)
+
+    dispatcher.add_handler(CallbackQueryHandler(button_more_callback))
 
     unsubscribe_handler = CommandHandler('unsubscribe', unsubscribe, pass_args=True)
     dispatcher.add_handler(unsubscribe_handler)

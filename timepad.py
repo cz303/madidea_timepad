@@ -99,12 +99,12 @@ def introspect(token):
     return json.loads(response.text)
 
 
-def get_events_by_date(date=datetime.datetime.today().strftime('%Y-%m-%d'), city=''):
+def get_events_by_date(min_index, date=datetime.datetime.today().strftime('%Y-%m-%d'), city=''):
     params = {
         'starts_at_min': date + "T00:00:00+0300",
         'starts_at_max': date + "T23:59:59+0300",
         'access_statuses': "public",
-        'limit': 5
+        'skip': min_index
     }
     if len(city) > 0:
         params['cities'] = city
