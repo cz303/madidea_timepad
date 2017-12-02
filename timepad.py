@@ -32,7 +32,7 @@ def get_user_events(user_token):
 
 
 def get_events_data(ids):
-    response = requests.get(API_URL + '/v1/events/?event_ids={0}'.format(
+    response = requests.get(API_URL + '/v1/events/?event_ids={0}&access_statuses=public'.format(
         ','.join(map(str, ids))))
     data = json.loads(response.text)
     return data['values']

@@ -7,6 +7,7 @@ from datetime import datetime
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
                     level=logging.INFO)
 
+
 def start(bot, update):
     bot.send_message(chat_id=update.message.chat_id,
                      text="Please, use /token command to set up your token")
@@ -17,7 +18,7 @@ def has_token(func):
         connector = database.Connector()
         user = connector.get_user_by_chat_id(update.message.chat_id)
         if user is None:
-            bot.send_message(chat_id=update.message.chat_id, text='Set up your token first')
+            bot.send_message(chat_id=update.message.chat_id, text='Сначала установи токен')
             return
         func(bot, update, *args, **kwargs)
 
@@ -26,17 +27,17 @@ def has_token(func):
 
 def set_token(bot, update, args):
     if len(args) != 1:
-        bot.send_message(chat_id=update.message.chat_id, text="Use /token <your TimePad token>")
+        bot.send_message(chat_id=update.message.chat_id, text='Используй /token <ваш TimePad токен>')
         return
     token = args[0]
 
     data = timepad.introspect(token)
     if data is None:
-        bot.send_message(chat_id=update.message.chat_id, text='Sorry, could not get your data. Try again later')
+        bot.send_message(chat_id=update.message.chat_id, text='Не получилось получить данные, попробуй позже')
         return
     active = data.get('active', False)
     if not active:
-        bot.send_message(chat_id=update.message.chat_id, text='Token is invalid')
+        bot.send_message(chat_id=update.message.chat_id, text='Некорректный токен')
         logging.info(repr(data))
         return
 
@@ -45,9 +46,9 @@ def set_token(bot, update, args):
     city = 'Без города'
     connector.add_user(data['user_id'], update.message.chat_id, update.message.from_user.username,
                        data['user_email'], token, city, last_timestamp)
-    bot.send_message(chat_id=update.message.chat_id, text='Connected!')
+    bot.send_message(chat_id=update.message.chat_id, text='Успех!')
 
-@has_token
+
 def get_today_events(bot, update):
     connector = database.Connector()
     city = connector.get_user_city(timepad.TIMEPAD_TOKEN) # FIXIT
@@ -74,13 +75,20 @@ def notify_subscribers(bot, user, new_events):
     subscribers = connector.get_subscribers(user['id'])
     events = timepad.get_events_data(new_events)
 
-    names = list(map(lambda event: event['name'], events))
-    for subscriber_id in subscribers:
-        subscriber = connector.get_user_by_id(subscriber_id)
-        logging.info('Notifying {}'.format(str(subscriber)))
-        bot.send_message(chat_id=subscriber['chat_id'],
-                         text='Yoba-Boba, your friend {} just joined this shit: {}'.format(
-                             str(user['tg_name']), str(names)))
+    if len(events) == 0:
+        return
+    for event in events:
+        for subscriber_id in subscribers:
+            subscriber = connector.get_user_by_id(subscriber_id)
+            logging.info('Notifying {}'.format(str(subscriber)))
+            event_data = event['name'] + '\n' + event['url']
+            bot.send_message(chat_id=subscriber['chat_id'],
+                             text='Йоба-боба, твой друг @{} хочет посетить событие:\n{}'.format(
+                                 user['tg_name'], event_data))
+            photo = event['poster_image']['uploadcare_url']
+            if photo.startswith('//'):
+                photo = 'https:' + photo
+            bot.send_photo(chat_id=subscriber['chat_id'], photo=photo)
 
 
 def crawl_new_events(bot, job):
@@ -113,14 +121,15 @@ def subscribe(bot, update, args):
                          text='Use /subscribe <Telegram login>')
         return
     subscribed_to = args[0]
+    if subscribed_to.startswith('@'):
+        subscribed_to = subscribed_to[1:]
     user_id = connector.get_user_by_chat_id(update.message.chat_id)
     subscribed_id = connector.get_user_by_telegram(subscribed_to)
     if subscribed_id is None:
-        bot.send_message(chat_id=update.message.chat_id, text='Unknown user! Ask him to add this bot')
+        bot.send_message(chat_id=update.message.chat_id, text='Неизвестный пользователь! Попросите его добавить бота')
         return
     connector.add_subscription(subscribed_id, user_id)
-    bot.send_message(chat_id=update.message.chat_id, text='Subscribed!')
-
+    bot.send_message(chat_id=update.message.chat_id, text='Подписано!')
 
 
 if __name__ == '__main__':
