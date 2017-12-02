@@ -47,17 +47,18 @@ def set_token(bot, update, args):
                        data['user_email'], token, city, last_timestamp)
     bot.send_message(chat_id=update.message.chat_id, text='Connected!')
 
-
+@has_token
 def get_today_events(bot, update):
     connector = database.Connector()
-    city = connector.get_user_city(timepad.TIMEPAD_TOKEN)
+    city = connector.get_user_city(timepad.TIMEPAD_TOKEN) # FIXIT
     events = timepad.get_events_by_date(city)
     bot.send_message(chat_id=update.message.chat_id, text="\n\n".join(events))
 
+@has_token
 def get_events_by_token(bot, update):
     connector = database.Connector()
-    city = connector.get_user_city(timepad.TIMEPAD_TOKEN)
-    events = timepad.get_events_by_token(timepad.TIMEPAD_TOKEN, city)
+    city = connector.get_user_city(timepad.TIMEPAD_TOKEN) # FIXIT
+    events = timepad.get_events_by_token(timepad.TIMEPAD_TOKEN, city) # FIXIT
     bot.send_message(chat_id=update.message.chat_id, text="\n\n".join(events), parse_mode='Markdown')
 
 def echo(bot, update):
@@ -67,7 +68,7 @@ def echo(bot, update):
 def error_callback(bot, update, error):
     logging.warning(repr(error))
 
-
+@has_token
 def notify_subscribers(bot, user, new_events):
     connector = database.Connector()
     subscribers = connector.get_subscribers(user['id'])
