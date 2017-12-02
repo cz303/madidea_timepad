@@ -34,7 +34,8 @@ def format_event_descr(event):
 	event_repr = ("Что? *{0}*\n"
 		"А глобально? _{1}_\n"
 		"Когда? _{2}_\n"
-		"Подробнее: {3}").format(event["name"],
+		"[Подробнее]({3})\n"
+		"[Регистрация]({3}#register)").format(event["name"],
                             ', '.join(cat["name"] for cat in event["categories"]),
                             ", ".join(event["starts_at"].split('+')[0].split("T")),
                             event["url"])
