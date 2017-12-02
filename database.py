@@ -33,7 +33,7 @@ class Connector:
         c = self.connection.cursor()
         c.execute('SELECT subscriberId FROM subscriptions WHERE userId = ?', (user_id,))
         result = map(lambda row: row[0], c.fetchall())
-        return result
+        return list(result)
 
     def get_user_events(self, user_id):
         c = self.connection.cursor()
@@ -66,9 +66,23 @@ class Connector:
 
     def add_subscription(self, user_id, subscriber_id):
         c = self.connection.cursor()
-        c.execute('INSERT INTO subscriptions(userId, subscriberId) ' +
+        c.execute('INSERT OR IGNORE INTO subscriptions(userId, subscriberId) '
                   'VALUES(?, ?)', (user_id, subscriber_id))
         self.connection.commit()
+
+    def remove_subscription(self, user_id, subscriber_id):
+        c = self.connection.cursor()
+        c.execute('DELETE FROM subscriptions '
+                  'WHERE userId = ? AND subscriberId = ?', (user_id, subscriber_id))
+        self.connection.commit()
+
+    def get_subscriptions(self, subscriber_id):
+        c = self.connection.cursor()
+        c.execute('SELECT users.telegramName FROM subscriptions '
+                  'INNER JOIN users ON subscriptions.userId = users.id '
+                  'WHERE subscriberId = ?', (subscriber_id, ))
+        result = map(lambda row: {'tg_name': row[0]}, c.fetchall())
+        return list(result)
 
     def set_city(self, user_token, city_name):
         c = self.connection.cursor()
@@ -81,7 +95,7 @@ class Connector:
         # FIXIT token --> id 
         c.execute('SELECT cityName FROM users WHERE token = ?', (user_token,))
         city = map(lambda row: row[0], c.fetchall())
-        return city
+        return list(city)
 
     def get_user_by_id(self, user_id):
         c = self.connection.cursor()
