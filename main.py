@@ -151,11 +151,6 @@ def crawl_new_events(bot, job):
     connector.set_introspect_timestamp(user['id'], datetime.now().timestamp())
 
 
-<<<<<<< HEAD
-
-@has_token
-=======
->>>>>>> fb209237cc2ad0d040a86f9266d76a40f09b44f4
 def get_top_events(bot, update, args):
     top_events = timepad.get_top_events(args)
     message = '\n'.join(['Топ:'] + list(map(lambda event: event['url'], top_events)))
@@ -218,9 +213,6 @@ def show_subscriptions_handler(bot, update):
 def show_help(bot, update):
     bot.send_message(chat_id=update.message.chat_id, text='Иди на хуй пока что')
 
-def show_help(bot, update):
-    bot.send_message(chat_id=update.message.chat_id, text='Иди на хуй пока что')
->>>>>>> fb209237cc2ad0d040a86f9266d76a40f09b44f4
 
 if __name__ == '__main__':
     with open('telegram.token', 'r') as tg:
