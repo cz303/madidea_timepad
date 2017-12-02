@@ -5,14 +5,17 @@ import json
 API_URL = 'https://api.timepad.ru'
 
 def get_user_events(user_token):
-	user_response = requests.get(API_URL + '/introspect?token={0}'.format(user_token))
-	user_info = json.loads(user_response.text)
+	response = requests.get(API_URL + '/introspect?token={0}'.format(user_token))
+	user_info = json.loads(response.text)
 	# user_id = user_info['user_id']
 	event_ids = [order['event']['id'] for order in user_info['orders']]
 	for event_id in event_ids:
-		event_info = json.loads(requests.get(API_URL + '/v1/events/{0}?fields=name'.format(event_id)).text)
-		if 'name' in event_info.keys():
-			print(event_info['name'])	
+		response = requests.get(API_URL + '/v1/events/{0}?fields=name&token={1}'.format(event_id, user_token))
+		if response.status_code != requests.codes.ok:
+			logging.warning('Private event: {0}'.format(event_id))
+			continue
+		event_info = json.loads(response.text)
+		print(event_info['name'])	
 	return event_ids
 
 def introspect(token):
