@@ -37,28 +37,20 @@ def get_events_data(ids):
     data = json.loads(response.text)
     return data['values']
 
-def get_top_events(keywords):
+
+def find_events(events, keywords):
     payload = {
         'fields': 'registration_data',
         'keywords': ','.join(keywords),
         'limit': 100
     }
+    if len(events) > 0:
+        payload['event_ids'] = ','.join(map(str, events))
+
     response = requests.get(API_URL + '/v1/events/', params=payload)
-    logging.info(response.text)
     events = json.loads(response.text)['values']
     events.sort(key=lambda event: -event['registration_data']['tickets_total'])
     return events[:3]
-
-def introspect(token):
-    payload = {
-        'token': token
-    }
-    response = requests.get(API_URL + '/introspect', params=payload)
-    if response.status_code != requests.codes.ok:
-        logging.warning('Got non-200 response from API: {}'.format(str(response.status_code)))
-        logging.warning(response.text)
-        return None
-    return json.loads(response.text)
 
 def format_event_descr(event):
     event_repr = ("Что? *{0}*\n"
@@ -83,6 +75,19 @@ def get_events(params):
         events.append(format_event_descr(event))
 
     return events
+
+
+def introspect(token):
+    payload = {
+        'token': token
+    }
+    response = requests.get(API_URL + '/introspect', params=payload)
+    if response.status_code != requests.codes.ok:
+        logging.warning('Got non-200 response from API: {}'.format(str(response.status_code)))
+        logging.warning(response.text)
+        return None
+    return json.loads(response.text)
+
 
 if __name__ == '__main__':
     print(get_events_by_token(TIMEPAD_TOKEN, 'Санкт-Петербург'))

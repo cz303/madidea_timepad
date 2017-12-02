@@ -100,6 +100,7 @@ class Connector:
         c = self.connection.cursor()
         # FIXIT token --> id 
         c.execute('UPDATE users SET cityName = ? WHERE token = ?', (city_name, user_id))
+        print(city_name, 'set', user_id)
         self.connection.commit()
 
     def get_city(self, user_id):
@@ -107,6 +108,7 @@ class Connector:
         # FIXIT token --> id 
         c.execute('SELECT cityName FROM users WHERE token = ?', (user_id,))
         city = map(lambda row: row[0], c.fetchall())
+        print(*list(city), 'get')
         return str(*list(city))
 
     def set_introspect_timestamp(self, user_id, ts):
@@ -123,6 +125,17 @@ class Connector:
                 'chat_id': result[0]
             }
         return None
+
+    def get_top_friend_events(self, user_id):
+        c = self.connection.cursor()
+        c.execute('SELECT users_events.eventId, COUNT(users.id) FROM users '
+                  'INNER JOIN subscriptions '
+                  'ON users.id = subscriptions.userId AND subscriptions.subscriberId = ? '
+                  'INNER JOIN users_events ON users.id = users_events.userId '
+                  'GROUP BY users_events.eventId '
+                  'ORDER BY COUNT(users.id) DESC ', (user_id,))
+        result = c.fetchall()
+        return list(map(lambda row: {'event_id': row[0], 'count': row[1]}, result))
 
 def init_db():
     conn = get_connection()

@@ -8,7 +8,7 @@ import requests
 import json
 
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-                    level=logging.INFO)
+                    level=logging.CRITICAL)
 
 MAX_EVENTS_IN_MSG = 5
 
@@ -20,7 +20,8 @@ def start(bot, update):
     if user is None:
         connector.add_user(update.message.chat_id, update.message.from_user.username)
     bot.send_message(chat_id=update.message.chat_id,
-                     text="Великолепный бот\n Список всех команд: /help")
+                     text="Великолепный бот\nСписок всех команд: /help\nПолучить токен: "
+                          "https://dev.timepad.ru/api/oauth/")
 
 
 def has_token(func):
@@ -53,7 +54,7 @@ def set_token(bot, update, args):
 
     connector = database.Connector()
     last_timestamp = 0
-    city = ''
+    city = 'Москва' # default city
 
     connector.set_timepad_data_for_chat_id(update.message.chat_id, data['user_id'],
                                            data['user_email'], token, city, last_timestamp)
@@ -150,10 +151,16 @@ def crawl_new_events(bot, job):
 
 
 def get_top_events(bot, update, args):
-    top_events = timepad.get_top_events(args)
-    message = '\n'.join(['Топ:'] + list(map(lambda event: event['url'], top_events)))
+    connector = database.Connector()
+    user = connector.get_user_by_chat_id(update.message.chat_id)
+    top_events = connector.get_top_friend_events(user['id'])
+    event_scores = dict((event['event_id'], event['count']) for event in top_events)
+    found_events = timepad.find_events(event_scores.keys(), args)
+    if len(top_events) > 0:
+        found_events.sort(key=lambda event: -event_scores[event['id']])
+    message = '\n'.join(['Топ:'] + list(map(lambda event: timepad.format_event_descr(event), found_events)))
     bot.send_message(chat_id=update.message.chat_id,
-                     text=message)
+                     text=message, parse_mode='Markdown')
 
 
 def subscribe(bot, update, args):
@@ -227,7 +234,18 @@ def show_subscriptions_handler(bot, update):
     bot.send_message(chat_id=update.message.chat_id, text=message)
 
 def show_help(bot, update):
-    bot.send_message(chat_id=update.message.chat_id, text='Иди на хуй пока что')
+    help_msg = ('*Timepad Bot*\n'
+        '_Команды_: \n'
+        '/token <ваш TimePad токен> -- связать бота с аккаунтом Timepad\n'
+        '/city -- узнать текущий город\n'
+        '/city <название города> -- установить город\n'
+        '/events -- показать события, используя различные фильтры\n'
+        '/top -- показать самые популярные события\n'
+        '/subscribe <Telegram username> -- подписаться на обновления @username\n'
+        '/unsubscribe <Telegram username> -- отписаться от обновлений @username\n'
+        '/subscriptions -- показать список подписок\n'
+        '/help -- показать справку')
+    bot.send_message(chat_id=update.message.chat_id, text=help_msg, parse_mode='Markdown')
 
 def events_handler(bot, update):
     kb = [[ telegram.InlineKeyboardButton("Мои в этом городе", callback_data="my_local"),  telegram.InlineKeyboardButton("Мои в мире", callback_data="my_global") ],
