@@ -1,12 +1,16 @@
 import logging
-from telegram.ext import Updater, CommandHandler, MessageHandler, Filters
+from telegram.ext import Updater, CommandHandler, MessageHandler, CallbackQueryHandler, Filters
 import timepad
 import database
 from datetime import datetime
+import telegram
 
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
                     level=logging.INFO)
 
+MAX_EVENTS_IN_MSG = 4
+
+user_last_queries = {}
 
 def start(bot, update):
     bot.send_message(chat_id=update.message.chat_id,
@@ -51,12 +55,32 @@ def set_token(bot, update, args):
 
 
 def get_today_events(bot, update):
-    events = timepad.get_events_by_date()
-    bot.send_message(chat_id=update.message.chat_id, text="\n\n".join(events))
+    try:
+        min_index, date = user_last_queries[update.message.chat_id]
+    except KeyError:
+        min_index, date = 0, datetime.today().strftime('%Y-%m-%d')
+        user_last_queries[update.message.chat_id] = (min_index, date)
+
+    events = timepad.get_events_by_date(min_index, date)
+    if len(events) - min_index > MAX_EVENTS_IN_MSG:
+        kb = [[ telegram.InlineKeyboardButton("Да, ещё!", callback_data="ещё") ]]
+        kb_markup = telegram.InlineKeyboardMarkup(kb)
+        bot.send_message(chat_id=update.message.chat_id, text="\n\n".join(events[:MAX_EVENTS_IN_MSG]), parse_mode='Markdown')
+        left = len(events) - MAX_EVENTS_IN_MSG - min_index
+        text = "Мы показали не все события по этому запросу. Осталось {}. Показать ещё {}?".format(left, min(left, MAX_EVENTS_IN_MSG))
+        bot.send_message(chat_id=update.message.chat_id,
+                         text=text,
+                         reply_markup=kb_markup)
+        user_last_queries[update.message.chat_id] = (min_index + MAX_EVENTS_IN_MSG, date)
+    else:
+        bot.send_message(chat_id=update.message.chat_id, text="\n\n".join(events[min_index:]), parse_mode='Markdown')
+        user_last_queries.pop(update.message.chat_id, None)
+
 
 def get_events_by_token(bot, update):
     events = timepad.get_events_by_token(timepad.TIMEPAD_TOKEN)
     bot.send_message(chat_id=update.message.chat_id, text="\n\n".join(events), parse_mode='Markdown')
+
 
 def echo(bot, update):
     bot.send_message(chat_id=update.message.chat_id, text=update.message.text)
@@ -88,6 +112,7 @@ def crawl_new_events(bot, job):
         notify_subscribers(bot, user['id'])
         connector.add_user_events(user['id'], new_events)
 
+
 @has_token
 def get_top_events(bot, update, args):
     keywords = ','.join(args)
@@ -108,10 +133,19 @@ def subscribe(bot, update, users):
     user_id = connector.get_user_by_chat_id(update.message.chat_id)
     subscribed_id = connector.get_user_by_telegram(subscribed_to)
     if subscribed_id is None:
-        bot.send_message(chat_id=update.message.chat_id, text='Unknown user! Ask him to add this bot')
+        bot.send_message(chat_id=update.message.chat_id, text='Unknown user! Ask him to add this bot >:)')
     connector.add_subscription(subscribed_to, user_id)
     bot.send_message(chat_id=update.message.chat_id, text='Subscriber!')
 
+
+def button_more_callback(bot, update):
+    query = update.callback_query
+    if "ещё" not in query.data:
+        pass
+        print(query.data)
+    else:
+        update.message = query.message
+        get_today_events(bot, update)
 
 if __name__ == '__main__':
     updater = Updater(token='474743017:AAGBMDsYi0LciJFLT2HB9YOVABV1atOoboM')
@@ -140,6 +174,8 @@ if __name__ == '__main__':
 
     subscribe_handler = CommandHandler('subscribe', subscribe, pass_args=True)
     dispatcher.add_handler(subscribe_handler)
+
+    dispatcher.add_handler(CallbackQueryHandler(button_more_callback))
 
     job_queue.run_repeating(crawl_new_events, interval=3, first=0)
 
