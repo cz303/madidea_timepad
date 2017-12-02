@@ -29,6 +29,22 @@ def get_user_events(user_token):
     #    ','.join(str(id) for id in event_ids))).text)
     return event_ids
 
+def get_events_by_token(token):
+    response = requests.get(API_URL + '/introspect?token={0}'.format(token))
+    user_info = json.loads(response.text)
+    event_ids = [order['event']['id'] for order in user_info['orders']]
+
+    response = requests.get(API_URL + '/v1/events', params={
+        'event_ids': ','.join(str(id) for id in event_ids),
+        'starts_at_min': 'now',
+        'limit': 5
+    })
+    if response.status_code != requests.codes.ok:
+        logging.warning('Got non-200 response from API: {}'.format(str(response.status_code)))
+        logging.warning(response.text)
+        return None
+    return json.loads(response.text)
+
 def introspect(token):
 	payload = {
 		'token': token

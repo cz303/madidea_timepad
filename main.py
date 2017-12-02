@@ -52,6 +52,9 @@ def get_today_events(bot, update):
     events = timepad.get_events_by_date()
     bot.send_message(chat_id=update.message.chat_id, text="\n\n".join(events))
 
+def get_events_by_token(bot, update):
+    events = timepad.get_events_by_token()
+    bot.send_message(chat_id=update.message.chat_id, text="\n\n".join(events))
 
 def echo(bot, update):
     bot.send_message(chat_id=update.message.chat_id, text=update.message.text)
@@ -125,6 +128,9 @@ if __name__ == '__main__':
 
     today_events_handler = CommandHandler('today', get_today_events, pass_args=False)
     dispatcher.add_handler(today_events_handler)
+
+    events_by_token_handler = CommandHandler('my_events', get_events_by_token, pass_args=False)
+    dispatcher.add_handler(events_by_token_handler)
 
     top_events_handler = CommandHandler('top', get_top_events, pass_args=True)
     dispatcher.add_handler(top_events_handler)
