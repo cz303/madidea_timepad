@@ -35,15 +35,51 @@ def set_token(bot, update, args):
     bot.send_message(chat_id=update.message.chat_id, text='Connected!')
 
 
+def get_today_events(bot, update):
+    bot.send_message(chat_id=update.message.chat_id, text="Got it!")
+    data = timepad.get_events_by_date()
+    bot.send_message(chat_id=update.message.chat_id, text=str(data))
+
 def echo(bot, update):
     bot.send_message(chat_id=update.message.chat_id, text=update.message.text)
+
 
 def error_callback(bot, update, error):
     logging.warning(repr(error))
 
+
+def notify_subscribers(bot, user_id):
+    connector = database.Connector()
+    subscribers = connector.get_subscribers(user_id)
+
+    for subscriber in subscribers:
+        bot.send_message(chat_id=subscriber['chat_id'],
+                         text='Yoba-Boba, your friend {} just subscribed to some shit'.format(str(user_id)))
+
+
+def crawl_new_events(bot, job):
+    connector = database.Connector()
+    user = connector.get_user_for_crawl()
+    if user is None:
+        return
+    # magic function to get new user events
+    events = set()
+    old_events = connector.get_user_events()
+    new_events = events - old_events
+    if len(new_events) > 0:
+        notify_subscribers(bot, user['id'])
+
+def get_top_events(bot, update, args):
+    keywords = ','.join(args)
+    #top_events = timepad.get_top_events(keywords)
+    top_events = []
+    bot.send_message(chat_id=update.message.chat_id,
+                     text='Here is your top: {}'.format('. '.join(top_events)))
+
 if __name__ == '__main__':
     updater = Updater(token='474743017:AAGBMDsYi0LciJFLT2HB9YOVABV1atOoboM')
     dispatcher = updater.dispatcher
+    job_queue = updater.job_queue
 
     dispatcher.add_error_handler(error_callback)
 
@@ -55,5 +91,13 @@ if __name__ == '__main__':
 
     token_handler = CommandHandler('token', set_token, pass_args=True)
     dispatcher.add_handler(token_handler)
+
+    today_events_handler = CommandHandler('today', get_today_events, pass_args=False)
+    dispatcher.add_handler(today_events_handler)
+
+    top_events_handler = CommandHandler('top', get_top_events, pass_args=True)
+    dispatcher.add_handler(top_events_handler)
+
+    job_queue.run_repeating(crawl_new_events, interval=3, first=0)
 
     updater.start_polling()
