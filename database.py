@@ -20,7 +20,9 @@ class Connector:
 
     def get_user_for_crawl(self):
         c = self.connection.cursor()
-        c.execute('SELECT id, token, telegramName FROM users ORDER BY introspectTimestamp LIMIT 1')
+        c.execute('SELECT id, token, telegramName FROM users '
+                  'WHERE token IS NOT NULL '
+                  'ORDER BY introspectTimestamp LIMIT 1')
         result = c.fetchone()
         if result is not None:
             return {

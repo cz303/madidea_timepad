@@ -10,7 +10,7 @@ logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s
 
 def start(bot, update):
     bot.send_message(chat_id=update.message.chat_id,
-                     text="Please, use /token command to set up your token")
+                     text="Великолепный бот")
     connector = database.Connector()
     connector.add_user(None, update.message.chat_id, update.message.from_user.username,
                        None, None, None, None)
@@ -49,33 +49,37 @@ def set_token(bot, update, args):
     city = prompt_city(bot, update)
 
     connector.set_timepad_data_for_chat_id(update.message.chat_id, data['user_id'],
-                       data['user_email'], token, city, last_timestamp)
+                                           data['user_email'], token, city, last_timestamp)
     bot.send_message(chat_id=update.message.chat_id, text='Успех')
 
 
 def get_today_events(bot, update):
     connector = database.Connector()
-    city = connector.get_user_city(timepad.TIMEPAD_TOKEN) # FIXIT
+    city = connector.get_user_city(timepad.TIMEPAD_TOKEN)  # FIXIT
     events = timepad.get_events_by_date(city)
     bot.send_message(chat_id=update.message.chat_id, text="\n\n".join(events))
+
 
 @has_token
 def get_events_by_token(bot, update):
     connector = database.Connector()
-    city = connector.get_user_city(timepad.TIMEPAD_TOKEN) # FIXIT
-    events = timepad.get_events_by_token(timepad.TIMEPAD_TOKEN, city) # FIXIT
+    city = connector.get_user_city(timepad.TIMEPAD_TOKEN)  # FIXIT
+    events = timepad.get_events_by_token(timepad.TIMEPAD_TOKEN, city)  # FIXIT
     bot.send_message(chat_id=update.message.chat_id, text="\n\n".join(events), parse_mode='Markdown')
+
 
 def echo(bot, update):
     bot.send_message(chat_id=update.message.chat_id, text=update.message.text)
 
+
 def error_callback(bot, update, error):
     logging.warning(repr(error))
+
 
 def set_city(bot, update, args):
     city = str(args[0])
     connector = database.Connector()
-    connector.set_city(timepad.TIMEPAD_TOKEN, city) # FIXIT
+    connector.set_city(timepad.TIMEPAD_TOKEN, city)  # FIXIT
     bot.send_message(chat_id=update.message.chat_id,
                      text='Ok, you are in {}'.format('. '.join(city)))
 
@@ -114,16 +118,15 @@ def crawl_new_events(bot, job):
         notify_subscribers(bot, user, new_events)
         connector.add_user_events(user['id'], new_events)
 
-@has_token
+
 def get_top_events(bot, update, args):
     keywords = ','.join(args)
     # top_events = timepad.get_top_events(keywords)
     top_events = []
     bot.send_message(chat_id=update.message.chat_id,
-                     text='Here is your top: {}'.format('. '.join(top_events)))
+                     text='Топ: {}'.format('. '.join(top_events)))
 
 
-@has_token
 def subscribe(bot, update, args):
     connector = database.Connector()
     if len(args) != 1:
@@ -141,7 +144,7 @@ def subscribe(bot, update, args):
     connector.add_subscription(subscribed_id, user['id'])
     bot.send_message(chat_id=update.message.chat_id, text='Подписано')
 
-@has_token
+
 def unsubscribe(bot, update, args):
     connector = database.Connector()
     if len(args) != 1:
@@ -159,7 +162,7 @@ def unsubscribe(bot, update, args):
     connector.remove_subscription(subscribed_id, user['id'])
     bot.send_message(chat_id=update.message.chat_id, text='Подписка удалена')
 
-@has_token
+
 def show_subscriptions_handler(bot, update):
     connector = database.Connector()
     user = connector.get_user_by_chat_id(update.message.chat_id)
@@ -168,9 +171,8 @@ def show_subscriptions_handler(bot, update):
     bot.send_message(chat_id=update.message.chat_id, text=message)
 
 
-
 if __name__ == '__main__':
-    updater = Updater(token='474743017:AAGBMDsYi0LciJFLT2HB9YOVABV1atOoboM')
+    updater = Updater(token='467230576:AAEK7jNpT6y_r2BnEp4nOWy96ZA1FyocyaM')
     dispatcher = updater.dispatcher
     job_queue = updater.job_queue
 
