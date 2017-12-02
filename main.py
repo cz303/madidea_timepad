@@ -237,6 +237,14 @@ def show_help(bot, update):
         '/help -- показать справку')
     bot.send_message(chat_id=update.message.chat_id, text=help_msg, parse_mode='Markdown')
 
+def events_handler(bot, update):
+    kb = [[ telegram.InlineKeyboardButton("Мои в этом городе", callback_data="my_local"), telegram.InlineKeyboardButton("Все в этом городе", callback_data="all_local") ],
+          [ telegram.InlineKeyboardButton("Мои, где угодно", callback_data="my_global"), telegram.InlineKeyboardButton("Все, где угодно", callback_data="all_global") ]]
+    kb_markup = telegram.InlineKeyboardMarkup(kb)
+    bot.send_message(chat_id=update.message.chat_id,
+                     text="Выберите фильтр по событиям:",
+                     reply_markup=kb_markup)
+
 
 if __name__ == '__main__':
     with open('telegram.token', 'r') as tg:
@@ -274,6 +282,9 @@ if __name__ == '__main__':
 
     set_city_handler = CommandHandler('city', set_city, pass_args=True)
     dispatcher.add_handler(set_city_handler)
+
+    universal_events_handler = CommandHandler("events", events_handler, pass_args=False)
+    dispatcher.add_handler(universal_events_handler)
 
     help_handler = CommandHandler('help', show_help, pass_args=False)
     dispatcher.add_handler(help_handler)
