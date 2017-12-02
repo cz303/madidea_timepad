@@ -65,14 +65,10 @@ def set_token(bot, update, args):
 
 
 def get_events_by_params(bot, update, parameters_input={}):
-    print(parameters_input)
+    # print(parameters_input)
     try:
         min_index, parameters = user_last_queries[update.message.chat_id]
     except KeyError:
-        min_index, parameters = 0, parameters_input
-        user_last_queries[update.message.chat_id] = (min_index, parameters_input)
-
-    if parameters_input is not None and (parameters != parameters_input):
         min_index, parameters = 0, parameters_input
         user_last_queries[update.message.chat_id] = (min_index, parameters_input)
 
@@ -105,7 +101,6 @@ def set_city(bot, update, args):
     if len(args) == 0:
         connector = database.Connector()
         city = connector.get_city(timepad.TIMEPAD_TOKEN)  # FIXIT
-        print(city)
         bot.send_message(chat_id=update.message.chat_id,
                          text='Ты в городе {}'.format(city))
     else:
