@@ -10,7 +10,7 @@ import json
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
                     level=logging.CRITICAL)
 
-MAX_EVENTS_IN_MSG = 5
+MAX_EVENTS_IN_MSG = 10
 
 user_last_queries = {}
 
@@ -83,7 +83,7 @@ def get_events_by_params(bot, update, parameters_input=None):
         kb_markup = telegram.InlineKeyboardMarkup(kb)
         bot.send_message(chat_id=update.message.chat_id, text="\n\n".join(events[:MAX_EVENTS_IN_MSG]), parse_mode='Markdown')
         left = len(events) - MAX_EVENTS_IN_MSG - min_index
-        text = "Мы показали не все события по этому запросу. Осталось {}. Показать ещё {}?".format(left, min(left, MAX_EVENTS_IN_MSG))
+        text = "Мы показали не все события по этому запросу. Показать ещё {}?".format(left, min(left, MAX_EVENTS_IN_MSG))
         bot.send_message(chat_id=update.message.chat_id,
                          text=text,
                          reply_markup=kb_markup)
