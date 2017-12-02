@@ -81,7 +81,7 @@ def get_events_by_params(bot, update, parameters_input=None):
     if len(events) - min_index > MAX_EVENTS_IN_MSG:
         kb = [[ telegram.InlineKeyboardButton("Да, ещё!", callback_data="ещё") ]]
         kb_markup = telegram.InlineKeyboardMarkup(kb)
-        bot.send_message(chat_id=update.message.chat_id, text="\n\n".join(events[:MAX_EVENTS_IN_MSG]), parse_mode='Markdown')
+        bot.send_message(chat_id=update.message.chat_id, text="\n".join(events[:MAX_EVENTS_IN_MSG]), parse_mode='Markdown')
         left = len(events) - MAX_EVENTS_IN_MSG - min_index
         text = "Мы показали не все события по этому запросу. Показать ещё {}?".format(left, min(left, MAX_EVENTS_IN_MSG))
         bot.send_message(chat_id=update.message.chat_id,
@@ -89,7 +89,7 @@ def get_events_by_params(bot, update, parameters_input=None):
                          reply_markup=kb_markup)
         user_last_queries[update.message.chat_id] = (min_index + MAX_EVENTS_IN_MSG, parameters)
     else:
-        bot.send_message(chat_id=update.message.chat_id, text="\n\n".join(events[min_index:]), parse_mode='Markdown')
+        bot.send_message(chat_id=update.message.chat_id, text="\n".join(events[min_index:]), parse_mode='Markdown')
         user_last_queries.pop(update.message.chat_id, None)
 
 
