@@ -25,8 +25,8 @@ def get_user_events(user_token):
     response = requests.get(API_URL + '/introspect?token={0}'.format(user_token))
     user_info = json.loads(response.text)
     event_ids = [order['event']['id'] for order in user_info['orders']]
-    print(requests.get(API_URL + '/v1/events/?event_ids={0}&access_statuses=public&starts_at_min=now'.format(
-        ','.join(str(id) for id in event_ids))).text)
+    # print(requests.get(API_URL + '/v1/events/?event_ids={0}&access_statuses=public&starts_at_min=now'.format(
+    #    ','.join(str(id) for id in event_ids))).text)
     return event_ids
 
 
