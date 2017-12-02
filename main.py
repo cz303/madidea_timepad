@@ -1,5 +1,7 @@
 import logging
 from telegram.ext import Updater, CommandHandler, MessageHandler, Filters
+import timepad
+import database
 
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
                     level=logging.INFO)
@@ -11,20 +13,37 @@ def start(bot, update):
 
 
 def set_token(bot, update, args):
-    logging.info('Got args {} from {}'.format(repr(args), update.message.chat_id))
     if len(args) != 1:
         bot.send_message(chat_id=update.message.chat_id, text="Use /token <your TimePad token>")
         return
     token = args[0]
 
+    data = timepad.introspect(token)
+    if data is None:
+        bot.send_message(chat_id=update.message.chat_id, text='Sorry, could not get your data. Try again later')
+        return
+
+    if not data['active']:
+        bot.send_message(chat_id=update.message.chat_id, text='Token is invalid')
+        logging.info(repr(data))
+        return
+
+    connector = database.Connector()
+    connector.add_user(data['user_id'], data['user_email'], token)
+    bot.send_message(chat_id=update.message.chat_id, text="Here's your data: {}".format(repr(data)))
+
 
 def echo(bot, update):
     bot.send_message(chat_id=update.message.chat_id, text=update.message.text)
 
+def error_callback(bot, update, error):
+    logging.warning(repr(error))
 
 if __name__ == '__main__':
     updater = Updater(token='474743017:AAGBMDsYi0LciJFLT2HB9YOVABV1atOoboM')
     dispatcher = updater.dispatcher
+
+    dispatcher.add_error_handler(error_callback)
 
     start_handler = CommandHandler('start', start)
     dispatcher.add_handler(start_handler)
