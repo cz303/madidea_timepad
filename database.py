@@ -108,8 +108,7 @@ class Connector:
         # FIXIT token --> id 
         c.execute('SELECT cityName FROM users WHERE token = ?', (user_id,))
         city = map(lambda row: row[0], c.fetchall())
-        print(*list(city), 'get')
-        return str(*list(city))
+        return ' '.join(list(city))
 
     def set_introspect_timestamp(self, user_id, ts):
         c = self.connection.cursor()
