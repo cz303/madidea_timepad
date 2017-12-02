@@ -213,6 +213,9 @@ if __name__ == '__main__':
     set_city_handler = CommandHandler('city', set_city, pass_args=True)
     dispatcher.add_handler(set_city_handler)
 
+    help_handler = CommandHandler('help', show_help, pass_args=False)
+    dispatcher.add_handler(help_handler)
+
     subscribe_handler = CommandHandler('subscribe', subscribe, pass_args=True)
     dispatcher.add_handler(subscribe_handler)
 
