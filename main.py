@@ -64,7 +64,7 @@ def set_token(bot, update, args):
     bot.send_message(chat_id=update.message.chat_id, text='Успех\n Список всех команд: /help')
 
 
-def get_events_by_params(bot, update, parameters_input=None):
+def get_events_by_params(bot, update, parameters_input={}):
     print(parameters_input)
     try:
         min_index, parameters = user_last_queries[update.message.chat_id]
@@ -83,7 +83,7 @@ def get_events_by_params(bot, update, parameters_input=None):
         kb_markup = telegram.InlineKeyboardMarkup(kb)
         bot.send_message(chat_id=update.message.chat_id, text="\n\n".join(events[:MAX_EVENTS_IN_MSG]), parse_mode='Markdown')
         left = len(events) - MAX_EVENTS_IN_MSG - min_index
-        text = "Мы показали не все события по этому запросу. Показать ещё {}?".format(left, min(left, MAX_EVENTS_IN_MSG))
+        text = "Мы показали не все события по этому запросу. Показать ещё {}?".format(MAX_EVENTS_IN_MSG)
         bot.send_message(chat_id=update.message.chat_id,
                          text=text,
                          reply_markup=kb_markup)
