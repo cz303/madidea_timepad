@@ -59,7 +59,7 @@ def set_token(bot, update, args):
 
 def get_today_events(bot, update):
     connector = database.Connector()
-    city = connector.get_user_city(timepad.TIMEPAD_TOKEN)  # FIXIT
+    city = connector.get_city(timepad.TIMEPAD_TOKEN)  # FIXIT
     events = timepad.get_events_by_date(city)
     bot.send_message(chat_id=update.message.chat_id, text="\n\n".join(events))
 
@@ -67,7 +67,7 @@ def get_today_events(bot, update):
 @has_token
 def get_events_by_token(bot, update):
     connector = database.Connector()
-    city = connector.get_user_city(timepad.TIMEPAD_TOKEN)  # FIXIT
+    city = connector.get_city(timepad.TIMEPAD_TOKEN)  # FIXIT
     events = timepad.get_events_by_token(timepad.TIMEPAD_TOKEN, city)  # FIXIT
     bot.send_message(chat_id=update.message.chat_id, text="\n\n".join(events), parse_mode='Markdown')
 
@@ -81,11 +81,17 @@ def error_callback(bot, update, error):
 
 
 def set_city(bot, update, args):
-    city = str(args[0])
-    connector = database.Connector()
-    connector.set_city(timepad.TIMEPAD_TOKEN, city)  # FIXIT
-    bot.send_message(chat_id=update.message.chat_id,
-                     text='Ok, you are in {}'.format(city))
+    if len(args) == 0:
+        connector = database.Connector()
+        city = connector.get_city(timepad.TIMEPAD_TOKEN)  # FIXIT
+        bot.send_message(chat_id=update.message.chat_id,
+                         text='Ты в городе {}'.format(city))
+    else:
+        city = str(*args)
+        connector = database.Connector()
+        connector.set_city(timepad.TIMEPAD_TOKEN, city)  # FIXIT
+        bot.send_message(chat_id=update.message.chat_id,
+                         text='Теперь ты в городе {}'.format(city))
 
 
 def notify_subscribers(bot, user, new_events):

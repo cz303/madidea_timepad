@@ -102,7 +102,7 @@ class Connector:
         c.execute('UPDATE users SET cityName = ? WHERE token = ?', (city_name, user_id))
         self.connection.commit()
 
-    def get_user_city(self, user_id):
+    def get_city(self, user_id):
         c = self.connection.cursor()
         # FIXIT token --> id 
         c.execute('SELECT cityName FROM users WHERE token = ?', (user_id,))
