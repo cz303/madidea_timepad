@@ -2,6 +2,7 @@ import logging
 from telegram.ext import Updater, CommandHandler, MessageHandler, Filters
 import timepad
 import database
+from datetime import datetime
 
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
                     level=logging.INFO)
@@ -29,7 +30,8 @@ def set_token(bot, update, args):
         return
 
     connector = database.Connector()
-    connector.add_user(data['user_id'], data['user_email'], token)
+    last_timestamp = 0
+    connector.add_user(data['user_id'], update.message.chat_id, data['user_email'], token, last_timestamp)
     bot.send_message(chat_id=update.message.chat_id, text='Connected!')
 
 
