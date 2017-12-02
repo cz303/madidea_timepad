@@ -109,6 +109,11 @@ class Connector:
         city = map(lambda row: row[0], c.fetchall())
         return str(*list(city))
 
+    def set_introspect_timestamp(self, user_id, ts):
+        c = self.connection.cursor()
+        c.execute('UPDATE users SET introspectTimestamp = ? WHERE id = ?', (ts, user_id))
+        self.connection.commit()
+        
     def get_user_by_id(self, user_id):
         c = self.connection.cursor()
         c.execute('SELECT chatId FROM users WHERE id = ?', (user_id,))
