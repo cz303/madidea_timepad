@@ -183,7 +183,8 @@ def subscribe(bot, update, args):
 
 def button_more_callback(bot, update):
     query = update.callback_query
-    parameters = { 'access_statuses': "public" }
+    parameters = { 'access_statuses': "public",
+                    'limit': 100 }
     update.message = query.message
 
     if "ещё" in query.data:
