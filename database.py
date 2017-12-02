@@ -95,7 +95,7 @@ class Connector:
         # FIXIT token --> id 
         c.execute('SELECT cityName FROM users WHERE token = ?', (user_id,))
         city = map(lambda row: row[0], c.fetchall())
-        return list(city)
+        return str(*list(city))
 
     def get_user_by_id(self, user_id):
         c = self.connection.cursor()

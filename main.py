@@ -62,6 +62,7 @@ def get_events_by_token(bot, update):
     city = connector.get_user_city(timepad.TIMEPAD_TOKEN) # FIXIT
     logging.info(city)
     events = timepad.get_events_by_token(timepad.TIMEPAD_TOKEN, city) # FIXIT
+    print(events)
     bot.send_message(chat_id=update.message.chat_id, text="\n\n".join(events), parse_mode='Markdown')
 
 def echo(bot, update):
@@ -75,7 +76,7 @@ def set_city(bot, update, args):
     connector = database.Connector()
     connector.set_city(timepad.TIMEPAD_TOKEN, city) # FIXIT
     bot.send_message(chat_id=update.message.chat_id,
-                     text='Ok, you are in {}'.format('. '.join(city)))
+                     text='Ok, you are in {}'.format(city))
 
 def notify_subscribers(bot, user, new_events):
     connector = database.Connector()
