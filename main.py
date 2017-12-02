@@ -81,10 +81,9 @@ def notify_subscribers(bot, user, new_events):
         for subscriber_id in subscribers:
             subscriber = connector.get_user_by_id(subscriber_id)
             logging.info('Notifying {}'.format(str(subscriber)))
-            event_data = event['name'] + '\n' + event['url']
             bot.send_message(chat_id=subscriber['chat_id'],
                              text='Йоба-боба, твой друг @{} хочет посетить событие:\n{}'.format(
-                                 user['tg_name'], event_data))
+                                 user['tg_name'], event['url']))
             photo = event['poster_image']['uploadcare_url']
             if photo.startswith('//'):
                 photo = 'https:' + photo
