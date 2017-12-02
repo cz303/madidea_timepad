@@ -173,9 +173,9 @@ def get_top_events(bot, update, args):
     found_events = timepad.find_events(event_scores.keys(), args)
     if len(top_events) > 0:
         found_events.sort(key=lambda event: -event_scores[event['id']])
-    message = '\n'.join(['Топ:'] + list(map(lambda event: '{}: {}'.format(event['url'], event['name']), found_events)))
+    message = '\n'.join(['Топ:'] + list(map(lambda event: timepad.format_event_descr(event), found_events)))
     bot.send_message(chat_id=update.message.chat_id,
-                     text=message)
+                     text=message, parse_mode='Markdown')
 
 
 def subscribe(bot, update, args):
