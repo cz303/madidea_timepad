@@ -37,6 +37,8 @@ def get_events_data(ids):
     data = json.loads(response.text)
     return data['values']
 
+def get_top_events(keywords):
+    return []
 
 def format_event_descr(event):
     event_repr = ("Что? *{0}*\n"

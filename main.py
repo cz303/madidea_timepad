@@ -120,12 +120,12 @@ def crawl_new_events(bot, job):
         logging.info('Notifying subscribers of {}'.format(str(user['id'])))
         notify_subscribers(bot, user, new_events)
         connector.add_user_events(user['id'], new_events)
+    connector.set_introspect_timestamp(user['id'], datetime.now().timestamp())
 
 
 def get_top_events(bot, update, args):
     keywords = ','.join(args)
-    # top_events = timepad.get_top_events(keywords)
-    top_events = []
+    top_events = timepad.get_top_events(keywords)
     bot.send_message(chat_id=update.message.chat_id,
                      text='Топ: {}'.format('. '.join(top_events)))
 

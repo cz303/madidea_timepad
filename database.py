@@ -102,6 +102,11 @@ class Connector:
         c.execute('UPDATE users SET cityName = ? WHERE token = ?', (city_name, user_id))
         self.connection.commit()
 
+    def set_introspect_timestamp(self, user_id, ts):
+        c = self.connection.cursor()
+        c.execute('UPDATE users SET introspectTimestamp = ? WHERE id = ?', (ts, user_id))
+        self.connection.commit()
+
     def get_user_city(self, user_id):
         c = self.connection.cursor()
         # FIXIT token --> id 
