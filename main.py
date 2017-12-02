@@ -51,7 +51,7 @@ def set_token(bot, update, args):
 
     connector = database.Connector()
     last_timestamp = 0
-    city = ''
+    city = 'Москва' # default city
 
     connector.set_timepad_data_for_chat_id(update.message.chat_id, data['user_id'],
                                            data['user_email'], token, city, last_timestamp)
