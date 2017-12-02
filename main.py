@@ -64,15 +64,18 @@ def error_callback(bot, update, error):
     logging.warning(repr(error))
 
 
-def notify_subscribers(bot, user):
+def notify_subscribers(bot, user, new_events):
     connector = database.Connector()
     subscribers = connector.get_subscribers(user['id'])
+    events = timepad.get_events_data(new_events)
 
+    names = list(map(lambda event: event['name'], events))
     for subscriber_id in subscribers:
         subscriber = connector.get_user_by_id(subscriber_id)
         logging.info('Notifying {}'.format(str(subscriber)))
         bot.send_message(chat_id=subscriber['chat_id'],
-                         text='Yoba-Boba, your friend {} just joined some shit'.format(str(user['tg_name'])))
+                         text='Yoba-Boba, your friend {} just joined this shit: {}'.format(
+                             str(user['tg_name']), str(names)))
 
 
 def crawl_new_events(bot, job):
@@ -85,7 +88,7 @@ def crawl_new_events(bot, job):
     new_events = events - old_events
     if len(new_events) > 0:
         logging.info('Notifying subscribers of {}'.format(str(user['id'])))
-        notify_subscribers(bot, user)
+        notify_subscribers(bot, user, new_events)
         connector.add_user_events(user['id'], new_events)
 
 @has_token
