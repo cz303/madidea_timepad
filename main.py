@@ -69,7 +69,6 @@ def echo(bot, update):
 def error_callback(bot, update, error):
     logging.warning(repr(error))
 
-@has_token
 def notify_subscribers(bot, user, new_events):
     connector = database.Connector()
     subscribers = connector.get_subscribers(user['id'])
