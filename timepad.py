@@ -30,16 +30,25 @@ def get_user_events(user_token):
     #    ','.join(str(id) for id in event_ids))).text)
     return event_ids
 
+
+def get_events_data(ids):
+    response = requests.get(API_URL + '/v1/events/?event_ids={0}'.format(
+        ','.join(map(str, ids))))
+    data = json.loads(response.text)
+    return data['values']
+
+
 def format_event_descr(event):
-	event_repr = ("Что? *{0}*\n"
-		"А глобально? _{1}_\n"
-		"Когда? _{2}_\n"
-		"[Подробнее]({3})\n"
-		"[Регистрация]({3}#register)").format(event["name"],
-                            ', '.join(cat["name"] for cat in event["categories"]),
-                            ", ".join(event["starts_at"].split('+')[0].split("T")),
-                            event["url"])
-	return event_repr
+    event_repr = ("Что? *{0}*\n"
+                  "А глобально? _{1}_\n"
+                  "Когда? _{2}_\n"
+                  "[Подробнее]({3})\n"
+                  "[Регистрация]({3}#register)").format(event["name"],
+                                                        ', '.join(cat["name"] for cat in event["categories"]),
+                                                        ", ".join(event["starts_at"].split('+')[0].split("T")),
+                                                        event["url"])
+    return event_repr
+
 
 def get_events_by_token(token, city):
     response = requests.get(API_URL + '/introspect?token={0}'.format(token))
@@ -62,6 +71,7 @@ def get_events_by_token(token, city):
         events.append(format_event_descr(event))
 
     return events
+
 
 def introspect(token):
     payload = {

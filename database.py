@@ -11,6 +11,7 @@ class Connector:
 
     def add_user(self, id, chat_id, tg_username, email, token, cityName, introspect_timestamp):
         # TODO: catch exceptions
+        tg_username = tg_username.lower()
         c = self.connection.cursor()
         c.execute('INSERT INTO users(id, chatId, telegramName, email, token, cityName, introspectTimestamp) VALUES ' +
                   '(?, ?, ?, ?, ?, ?, ?)', (id, chat_id, tg_username, email, token, cityName, introspect_timestamp))
@@ -18,12 +19,13 @@ class Connector:
 
     def get_user_for_crawl(self):
         c = self.connection.cursor()
-        c.execute('SELECT id, token FROM users ORDER BY introspectTimestamp LIMIT 1')
+        c.execute('SELECT id, token, telegramName FROM users ORDER BY introspectTimestamp LIMIT 1')
         result = c.fetchone()
         if result is not None:
             return {
                 'id': result[0],
-                'token': result[1]
+                'token': result[1],
+                'tg_name': result[2]
             }
         return None
 
@@ -54,7 +56,7 @@ class Connector:
         return None
 
     def get_user_by_telegram(self, login):
-        return None
+        login = login.lower()
         c = self.connection.cursor()
         c.execute('SELECT id FROM users WHERE telegramName = ?', (login,))
         result = c.fetchone()
@@ -80,6 +82,16 @@ class Connector:
         c.execute('SELECT cityName FROM users WHERE token = ?', (user_token,))
         city = map(lambda row: row[0], c.fetchall())
         return city
+
+    def get_user_by_id(self, user_id):
+        c = self.connection.cursor()
+        c.execute('SELECT chatId FROM users WHERE id = ?', (user_id,))
+        result = c.fetchone()
+        if result is not None:
+            return {
+                'chat_id': result[0]
+            }
+        return None
 
 def init_db():
     conn = get_connection()
