@@ -179,6 +179,12 @@ def show_subscriptions_handler(bot, update):
     message = '\n'.join(['Подписки:'] + list('@' + subscribed['tg_name'] for subscribed in subscriptions))
     bot.send_message(chat_id=update.message.chat_id, text=message)
 
+def show_help(bot, update):
+    bot.send_message(chat_id=update.message.chat_id, text='Иди на хуй пока что')
+
+def show_help(bot, update):
+    bot.send_message(chat_id=update.message.chat_id, text='Иди на хуй пока что')
+    
 if __name__ == '__main__':
     with open('telegram.token', 'r') as tg:
         token = tg.read()
@@ -209,6 +215,9 @@ if __name__ == '__main__':
 
     set_city_handler = CommandHandler('city', set_city, pass_args=True)
     dispatcher.add_handler(set_city_handler)
+
+    help_handler = CommandHandler('help', show_help, pass_args=False)
+    dispatcher.add_handler(help_handler)
 
     subscribe_handler = CommandHandler('subscribe', subscribe, pass_args=True)
     dispatcher.add_handler(subscribe_handler)
