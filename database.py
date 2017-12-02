@@ -13,8 +13,9 @@ class Connector:
         # TODO: catch exceptions
         tg_username = tg_username.lower()
         c = self.connection.cursor()
-        c.execute('INSERT INTO users(id, chatId, telegramName, email, token, cityName, introspectTimestamp) VALUES ' +
-                  '(?, ?, ?, ?, ?, ?, ?)', (id, chat_id, tg_username, email, token, cityName, introspect_timestamp))
+        c.execute('INSERT INTO users(timepadId, chatId, telegramName, email, token, cityName, introspectTimestamp) '
+                  'VALUES (?, ?, ?, ?, ?, ?, ?)',
+                  (id, chat_id, tg_username, email, token, cityName, introspect_timestamp))
         self.connection.commit()
 
     def get_user_for_crawl(self):
@@ -49,11 +50,19 @@ class Connector:
 
     def get_user_by_chat_id(self, chat_id):
         c = self.connection.cursor()
-        c.execute('SELECT id FROM users WHERE chatId = ?', (chat_id,))
+        c.execute('SELECT id, timepadId FROM users WHERE chatId = ?', (chat_id,))
         result = c.fetchone()
         if result is not None:
-            return result[0]
+            return {
+                'id': result[0],
+                'timepadId': result[1]
+            }
         return None
+
+    def set_timepad_data_for_chat_id(self, chat_id, timepad_id, email, token, city, last_timestamp):
+        c = self.connection.cursor()
+        c.execute('UPDATE users SET timepadId = ?, email = ?, token = ?, city = ?, last_timestamp = ? '
+                  'WHERE chatId = ?', (timepad_id, email, token, city, last_timestamp, chat_id))
 
     def get_user_by_telegram(self, login):
         login = login.lower()
@@ -116,7 +125,7 @@ def init_db():
     c.execute('DROP TABLE IF EXISTS users')
 
     c.execute('CREATE TABLE users '
-              '(id INTEGER PRIMARY KEY, chatId INTEGER, telegramName TEXT,'
+              '(id INTEGER PRIMARY KEY AUTOINCREMENT, timepadId INTEGER, chatId INTEGER, telegramName TEXT,'
               'email TEXT, token TEXT, cityName TEXT, introspectTimestamp TIMESTAMP)')
     c.execute('CREATE TABLE users_events '
               '(userId INTEGER, eventId INTEGER, PRIMARY KEY(userId, eventId),'

@@ -11,13 +11,16 @@ logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s
 def start(bot, update):
     bot.send_message(chat_id=update.message.chat_id,
                      text="Please, use /token command to set up your token")
+    connector = database.Connector()
+    connector.add_user(None, update.message.chat_id, update.message.from_user.username,
+                       None, None, None, None)
 
 
 def has_token(func):
     def func_wrapper(bot, update, *args, **kwargs):
         connector = database.Connector()
         user = connector.get_user_by_chat_id(update.message.chat_id)
-        if user is None:
+        if user['timepadId'] is None:
             bot.send_message(chat_id=update.message.chat_id, text='Сначала установи токен')
             return
         func(bot, update, *args, **kwargs)
@@ -45,7 +48,7 @@ def set_token(bot, update, args):
     last_timestamp = 0
     city = prompt_city(bot, update)
 
-    connector.add_user(data['user_id'], update.message.chat_id, update.message.from_user.username,
+    connector.set_timepad_data_for_chat_id(update.message.chat_id, data['user_id'],
                        data['user_email'], token, city, last_timestamp)
     bot.send_message(chat_id=update.message.chat_id, text='Успех')
 
@@ -130,12 +133,12 @@ def subscribe(bot, update, args):
     subscribed_to = args[0]
     if subscribed_to.startswith('@'):
         subscribed_to = subscribed_to[1:]
-    user_id = connector.get_user_by_chat_id(update.message.chat_id)
+    user = connector.get_user_by_chat_id(update.message.chat_id)
     subscribed_id = connector.get_user_by_telegram(subscribed_to)
     if subscribed_id is None:
         bot.send_message(chat_id=update.message.chat_id, text='Неизвестный пользователь. Попросите его добавить бота')
         return
-    connector.add_subscription(subscribed_id, user_id)
+    connector.add_subscription(subscribed_id, user['id'])
     bot.send_message(chat_id=update.message.chat_id, text='Подписано')
 
 @has_token
@@ -148,19 +151,19 @@ def unsubscribe(bot, update, args):
     subscribed_to = args[0]
     if subscribed_to.startswith('@'):
         subscribed_to = subscribed_to[1:]
-    user_id = connector.get_user_by_chat_id(update.message.chat_id)
+    user = connector.get_user_by_chat_id(update.message.chat_id)
     subscribed_id = connector.get_user_by_telegram(subscribed_to)
     if subscribed_id is None:
         bot.send_message(chat_id=update.message.chat_id, text='Неизвестный пользователь')
         return
-    connector.remove_subscription(subscribed_id, user_id)
+    connector.remove_subscription(subscribed_id, user['id'])
     bot.send_message(chat_id=update.message.chat_id, text='Подписка удалена')
 
 @has_token
 def show_subscriptions_handler(bot, update):
     connector = database.Connector()
-    user_id = connector.get_user_by_chat_id(update.message.chat_id)
-    subscriptions = connector.get_subscriptions(user_id)
+    user = connector.get_user_by_chat_id(update.message.chat_id)
+    subscriptions = connector.get_subscriptions(user['id'])
     message = '\n'.join(['Подписки:'] + list('@' + subscribed['tg_name'] for subscribed in subscriptions))
     bot.send_message(chat_id=update.message.chat_id, text=message)
 
