@@ -14,15 +14,13 @@ def start(bot, update):
 
 
 def has_token(func):
-    def func_wrapper(*args, **kwargs):
-        bot = args[0]
-        update = args[1]
+    def func_wrapper(bot, update, *args, **kwargs):
         connector = database.Connector()
         user = connector.get_user_by_chat_id(update.message.chat_id)
         if user is None:
             bot.send_message(chat_id=update.message.chat_id, text='Set up your token first')
             return
-        func(*args, **kwargs)
+        func(bot, update, *args, **kwargs)
 
     return func_wrapper
 
@@ -66,13 +64,15 @@ def error_callback(bot, update, error):
     logging.warning(repr(error))
 
 
-def notify_subscribers(bot, user_id):
+def notify_subscribers(bot, user):
     connector = database.Connector()
-    subscribers = connector.get_subscribers(user_id)
+    subscribers = connector.get_subscribers(user['id'])
 
-    for subscriber in subscribers:
+    for subscriber_id in subscribers:
+        subscriber = connector.get_user_by_id(subscriber_id)
+        logging.info('Notifying {}'.format(str(subscriber)))
         bot.send_message(chat_id=subscriber['chat_id'],
-                         text='Yoba-Boba, your friend {} just subscribed to some shit'.format(str(user_id)))
+                         text='Yoba-Boba, your friend {} just joined some shit'.format(str(user['tg_name'])))
 
 
 def crawl_new_events(bot, job):
@@ -85,7 +85,7 @@ def crawl_new_events(bot, job):
     new_events = events - old_events
     if len(new_events) > 0:
         logging.info('Notifying subscribers of {}'.format(str(user['id'])))
-        notify_subscribers(bot, user['id'])
+        notify_subscribers(bot, user)
         connector.add_user_events(user['id'], new_events)
 
 @has_token
@@ -98,19 +98,20 @@ def get_top_events(bot, update, args):
 
 
 @has_token
-def subscribe(bot, update, users):
+def subscribe(bot, update, args):
     connector = database.Connector()
-    if len(users) != 1:
+    if len(args) != 1:
         bot.send_message(chat_id=update.message.chat_id,
                          text='Use /subscribe <Telegram login>')
         return
-    subscribed_to = users[0]
+    subscribed_to = args[0]
     user_id = connector.get_user_by_chat_id(update.message.chat_id)
     subscribed_id = connector.get_user_by_telegram(subscribed_to)
     if subscribed_id is None:
         bot.send_message(chat_id=update.message.chat_id, text='Unknown user! Ask him to add this bot')
-    connector.add_subscription(subscribed_to, user_id)
-    bot.send_message(chat_id=update.message.chat_id, text='Subscriber!')
+        return
+    connector.add_subscription(subscribed_id, user_id)
+    bot.send_message(chat_id=update.message.chat_id, text='Subscribed!')
 
 
 if __name__ == '__main__':
