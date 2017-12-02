@@ -96,17 +96,17 @@ def echo(bot, update):
 def error_callback(bot, update, error):
     logging.warning(repr(error))
 
-
+@has_token
 def set_city(bot, update, args):
+    connector = database.Connector()
+    user = connector.get_user_by_chat_id(update.message.chat_id)
     if len(args) == 0:
-        connector = database.Connector()
-        city = connector.get_city(timepad.TIMEPAD_TOKEN)  # FIXIT
+        city = connector.get_city(user['token'])
         bot.send_message(chat_id=update.message.chat_id,
                          text='Ты в городе {}'.format(city))
     else:
         city = str(*args)
-        connector = database.Connector()
-        connector.set_city(timepad.TIMEPAD_TOKEN, city)  # FIXIT
+        connector.set_city(user['token'], city)
         bot.send_message(chat_id=update.message.chat_id,
                          text='Теперь ты в городе {}'.format(city))
 
@@ -151,9 +151,11 @@ def get_top_events(bot, update, args):
     user = connector.get_user_by_chat_id(update.message.chat_id)
     top_events = connector.get_top_friend_events(user['id'])
     event_scores = dict((event['event_id'], event['count']) for event in top_events)
+    logging.info(repr(event_scores.keys()))
     found_events = timepad.find_events(event_scores.keys(), args)
     if len(top_events) > 0:
         found_events.sort(key=lambda event: -event_scores[event['id']])
+    found_events = found_events[:3]
     message = '\n'.join(['Топ:'] + list(map(lambda event: timepad.format_event_descr(event), found_events)))
     bot.send_message(chat_id=update.message.chat_id,
                      text=message, parse_mode='Markdown')
@@ -177,18 +179,19 @@ def subscribe(bot, update, args):
     bot.send_message(chat_id=update.message.chat_id, text='Подписано')
 
 
+@has_token
 def button_more_callback(bot, update):
     query = update.callback_query
     parameters = { 'access_statuses': "public",
                     'limit': 100 }
     update.message = query.message
-
+    connector = database.Connector()
+    user = connector.get_user_by_chat_id(update.message.chat_id)
     if "ещё" in query.data:
         get_events_by_params(bot, update)
         return
     if "local" in query.data:
-        connector = database.Connector()
-        city = connector.get_city(timepad.TIMEPAD_TOKEN)  # FIXIT
+        city = connector.get_city(user['token'])
         if len(city) > 0:
             parameters['cities'] = city
     if "today" in query.data:
@@ -196,7 +199,7 @@ def button_more_callback(bot, update):
         parameters['starts_at_min'] = date + "T00:00:00+0300"
         parameters['starts_at_max'] = date + "T23:59:59+0300"
     if "my" in query.data:
-        my_token = timepad.TIMEPAD_TOKEN # FIX!!!
+        my_token = user['token']
         response = requests.get(timepad.API_URL + '/introspect?token={0}'.format(my_token))
         user_info = json.loads(response.text)
         event_ids = [order['event']['id'] for order in user_info['orders']]
