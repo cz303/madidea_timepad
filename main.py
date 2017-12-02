@@ -22,15 +22,15 @@ def set_token(bot, update, args):
     if data is None:
         bot.send_message(chat_id=update.message.chat_id, text='Sorry, could not get your data. Try again later')
         return
-
-    if not data['active']:
+    active = data.get('active', False)
+    if not active:
         bot.send_message(chat_id=update.message.chat_id, text='Token is invalid')
         logging.info(repr(data))
         return
 
     connector = database.Connector()
     connector.add_user(data['user_id'], data['user_email'], token)
-    bot.send_message(chat_id=update.message.chat_id, text="Here's your data: {}".format(repr(data)))
+    bot.send_message(chat_id=update.message.chat_id, text='Connected!')
 
 
 def echo(bot, update):
