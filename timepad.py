@@ -42,8 +42,17 @@ def get_events_by_token(token):
     if response.status_code != requests.codes.ok:
         logging.warning('Got non-200 response from API: {}'.format(str(response.status_code)))
         logging.warning(response.text)
-        return None
-    return json.loads(response.text)
+        return []
+
+    events = []
+    for event in json.loads(response.text)["values"]:
+    	event_repr = "Что? {}\n Что-что? {}\n Когда? {}\n Подробнее: {}".format(event["name"],
+    																			  event["categories"][0]["name"],
+    																			  ", ".join(event["starts_at"].split("T")),
+    																			  event["url"])
+    	events.append(event_repr)
+
+    return events
 
 def introspect(token):
 	payload = {
@@ -81,4 +90,4 @@ def get_events_by_date(date=datetime.datetime.today().strftime('%Y-%m-%d')):
 
 
 if __name__ == '__main__':
-    print(get_user_events(TIMEPAD_TOKEN))
+    print(get_events_by_token(TIMEPAD_TOKEN))
