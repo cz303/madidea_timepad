@@ -33,6 +33,11 @@ def set_token(bot, update, args):
     bot.send_message(chat_id=update.message.chat_id, text="Here's your data: {}".format(repr(data)))
 
 
+def get_today_events(bot, update):
+    bot.send_message(chat_id=update.message.chat_id, text="Got it!")
+    data = timepad.get_events_by_date()
+    bot.send_message(chat_id=update.message.chat_id, text=str(data))
+
 def echo(bot, update):
     bot.send_message(chat_id=update.message.chat_id, text=update.message.text)
 
@@ -53,5 +58,8 @@ if __name__ == '__main__':
 
     token_handler = CommandHandler('token', set_token, pass_args=True)
     dispatcher.add_handler(token_handler)
+
+    today_events_handler = CommandHandler('today', get_today_events, pass_args=False)
+    dispatcher.add_handler(today_events_handler)
 
     updater.start_polling()
