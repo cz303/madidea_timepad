@@ -14,7 +14,7 @@ def start(bot, update):
     if user is None:
         connector.add_user(update.message.chat_id, update.message.from_user.username)
     bot.send_message(chat_id=update.message.chat_id,
-                     text="Великолепный бот")
+                     text="Великолепный бот\n Список всех команд: /help")
 
 
 def has_token(func):
@@ -54,7 +54,7 @@ def set_token(bot, update, args):
     events = timepad.get_user_events(token)
     user = connector.get_user_by_chat_id(update.message.chat_id)
     connector.add_user_events(user['id'], events)
-    bot.send_message(chat_id=update.message.chat_id, text='Успех')
+    bot.send_message(chat_id=update.message.chat_id, text='Успех\n Список всех команд: /help')
 
 
 def get_today_events(bot, update):
@@ -178,6 +178,9 @@ def show_subscriptions_handler(bot, update):
     subscriptions = connector.get_subscriptions(user['id'])
     message = '\n'.join(['Подписки:'] + list('@' + subscribed['tg_name'] for subscribed in subscriptions))
     bot.send_message(chat_id=update.message.chat_id, text=message)
+
+def show_help(bot, update):
+    bot.send_message(chat_id=update.message.chat_id, text='Иди на хуй пока что')
 
 if __name__ == '__main__':
     with open('telegram.token', 'r') as tg:
