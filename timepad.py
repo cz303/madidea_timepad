@@ -38,13 +38,22 @@ def get_events_by_date(date=datetime.datetime.today().strftime('%Y-%m-%d')):
         'starts_at_min': date + "T00:00:00+0300",
         'starts_at_max': date + "T23:59:59+0300",
         'access_statuses': "public",
-        'limit': 2
+        'limit': 5
     })
     if response.status_code != requests.codes.ok:
         logging.warning('Got non-200 response from API: {}'.format(str(response.status_code)))
         logging.warning(response.text)
-        return None
-    return json.loads(response.text)
+        return []
+
+    events = []
+    for event in json.loads(response.text)["values"]:
+    	event_repr = "Что? {}\n Что-что? {}\n Когда? {}\n Подробнее: {}".format(event["name"],
+    																			  event["categories"][0]["name"],
+    																			  ", ".join(event["starts_at"].split("T")),
+    																			  event["url"])
+    	events.append(event_repr)
+
+    return events
 
 
 if __name__ == '__main__':

@@ -36,9 +36,8 @@ def set_token(bot, update, args):
 
 
 def get_today_events(bot, update):
-    bot.send_message(chat_id=update.message.chat_id, text="Got it!")
-    data = timepad.get_events_by_date()
-    bot.send_message(chat_id=update.message.chat_id, text=str(data))
+    events = timepad.get_events_by_date()
+    bot.send_message(chat_id=update.message.chat_id, text="\n\n".join(events))
 
 def echo(bot, update):
     bot.send_message(chat_id=update.message.chat_id, text=update.message.text)
