@@ -4,11 +4,13 @@ import timepad
 import database
 from datetime import datetime
 import telegram
+import requests
+import json
 
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
                     level=logging.INFO)
 
-MAX_EVENTS_IN_MSG = 4
+MAX_EVENTS_IN_MSG = 5
 
 user_last_queries = {}
 
@@ -61,16 +63,20 @@ def set_token(bot, update, args):
     bot.send_message(chat_id=update.message.chat_id, text='Успех\n Список всех команд: /help')
 
 
-def get_today_events(bot, update):
+def get_events_by_params(bot, update, parameters_input=None):
+    print(parameters_input)
     try:
-        min_index, date = user_last_queries[update.message.chat_id]
+        min_index, parameters = user_last_queries[update.message.chat_id]
     except KeyError:
-        min_index, date = 0, datetime.today().strftime('%Y-%m-%d')
-        user_last_queries[update.message.chat_id] = (min_index, date)
+        min_index, parameters = 0, parameters_input
+        user_last_queries[update.message.chat_id] = (min_index, parameters_input)
 
-    connector = database.Connector()
-    city = connector.get_city(timepad.TIMEPAD_TOKEN)  # FIXIT
-    events = timepad.get_events_by_date(min_index, date, city)
+    if parameters_input is not None and (parameters != parameters_input):
+        min_index, parameters = 0, parameters_input
+        user_last_queries[update.message.chat_id] = (min_index, parameters_input)
+
+    parameters["skip"] = min_index
+    events = timepad.get_events(parameters)
     if len(events) - min_index > MAX_EVENTS_IN_MSG:
         kb = [[ telegram.InlineKeyboardButton("Да, ещё!", callback_data="ещё") ]]
         kb_markup = telegram.InlineKeyboardMarkup(kb)
@@ -80,31 +86,10 @@ def get_today_events(bot, update):
         bot.send_message(chat_id=update.message.chat_id,
                          text=text,
                          reply_markup=kb_markup)
-        user_last_queries[update.message.chat_id] = (min_index + MAX_EVENTS_IN_MSG, date)
+        user_last_queries[update.message.chat_id] = (min_index + MAX_EVENTS_IN_MSG, parameters)
     else:
         bot.send_message(chat_id=update.message.chat_id, text="\n\n".join(events[min_index:]), parse_mode='Markdown')
         user_last_queries.pop(update.message.chat_id, None)
-
-
-@has_token
-def get_events_by_token(bot, update):
-    connector = database.Connector()
-    events = timepad.get_events_by_token(timepad.TIMEPAD_TOKEN, '') 
-    bot.send_message(chat_id=update.message.chat_id, text='Твои события:\n' + "\n\n".join(events), parse_mode='Markdown')
-
-@has_token
-def get_events_by_city(bot, update):
-    connector = database.Connector()
-    city = connector.get_city(timepad.TIMEPAD_TOKEN)  # FIXIT
-    events = []# timepad.get_events_by_token(timepad.TIMEPAD_TOKEN, city)  
-    bot.send_message(chat_id=update.message.chat_id, text='Все события в {0}:\n Нихуя пока что'.format(city) + "\n\n".join(events), parse_mode='Markdown')
-
-@has_token
-def get_events_by_city_and_token(bot, update):
-    connector = database.Connector()
-    city = connector.get_city(timepad.TIMEPAD_TOKEN)  # FIXIT
-    events = timepad.get_events_by_token(timepad.TIMEPAD_TOKEN, city)  
-    bot.send_message(chat_id=update.message.chat_id, text='Твои события в {0}:\n'.format(city) + "\n\n".join(events), parse_mode='Markdown')
 
 
 def echo(bot, update):
@@ -191,12 +176,30 @@ def subscribe(bot, update, args):
 
 def button_more_callback(bot, update):
     query = update.callback_query
-    if "ещё" not in query.data:
-        pass
-        print(query.data)
-    else:
-        update.message = query.message
-        get_today_events(bot, update)
+    parameters = { 'access_statuses': "public" }
+    update.message = query.message
+
+    if "ещё" in query.data:
+        get_events_by_params(bot, update)
+        return
+    if "local" in query.data:
+        connector = database.Connector()
+        city = connector.get_city(timepad.TIMEPAD_TOKEN)  # FIXIT
+        if len(city) > 0:
+            parameters['cities'] = city
+    if "today" in query.data:
+        date = datetime.today().strftime('%Y-%m-%d')
+        parameters['starts_at_min'] = date + "T00:00:00+0300"
+        parameters['starts_at_max'] = date + "T23:59:59+0300"
+    if "my" in query.data:
+        my_token = timepad.TIMEPAD_TOKEN # FIX!!!
+        response = requests.get(timepad.API_URL + '/introspect?token={0}'.format(my_token))
+        user_info = json.loads(response.text)
+        event_ids = [order['event']['id'] for order in user_info['orders']]
+        parameters['event_ids'] = ','.join(str(id) for id in event_ids)
+
+    get_events_by_params(bot, update, parameters)
+
 
 def unsubscribe(bot, update, args):
     connector = database.Connector()
@@ -227,8 +230,10 @@ def show_help(bot, update):
     bot.send_message(chat_id=update.message.chat_id, text='Иди на хуй пока что')
 
 def events_handler(bot, update):
-    kb = [[ telegram.InlineKeyboardButton("Мои в этом городе", callback_data="my_local"), telegram.InlineKeyboardButton("Все в этом городе", callback_data="all_local") ],
-          [ telegram.InlineKeyboardButton("Мои, где угодно", callback_data="my_global"), telegram.InlineKeyboardButton("Все, где угодно", callback_data="all_global") ]]
+    kb = [[ telegram.InlineKeyboardButton("Мои в этом городе", callback_data="my_local"),  telegram.InlineKeyboardButton("Мои в мире", callback_data="my_global") ],
+          [ telegram.InlineKeyboardButton("Все в этом городе", callback_data="all_local"), telegram.InlineKeyboardButton("Все в мире", callback_data="all_global") ],
+          [ telegram.InlineKeyboardButton("Сегодня в этом городе", callback_data="today_local"), telegram.InlineKeyboardButton("Сегодня в мире", callback_data="today_global") ]
+          ]
     kb_markup = telegram.InlineKeyboardMarkup(kb)
     bot.send_message(chat_id=update.message.chat_id,
                      text="Выберите фильтр по событиям:",
@@ -237,7 +242,7 @@ def events_handler(bot, update):
 
 if __name__ == '__main__':
     with open('telegram.token', 'r') as tg:
-        token = tg.read()
+        token = tg.read().strip()
 
     updater = Updater(token=token)
     dispatcher = updater.dispatcher
@@ -253,18 +258,6 @@ if __name__ == '__main__':
 
     token_handler = CommandHandler('token', set_token, pass_args=True)
     dispatcher.add_handler(token_handler)
-
-    today_events_handler = CommandHandler('today', get_today_events, pass_args=False)
-    dispatcher.add_handler(today_events_handler)
-
-    events_by_token_handler = CommandHandler('my_events', get_events_by_token, pass_args=False)
-    dispatcher.add_handler(events_by_token_handler)
-
-    events_by_city_handler = CommandHandler('local_events', get_events_by_city, pass_args=False)
-    dispatcher.add_handler(events_by_city_handler)
-
-    events_by_city_and_token_handler = CommandHandler('my_local_events', get_events_by_city_and_token, pass_args=False)
-    dispatcher.add_handler(events_by_city_and_token_handler)
 
     top_events_handler = CommandHandler('top', get_top_events, pass_args=True)
     dispatcher.add_handler(top_events_handler)

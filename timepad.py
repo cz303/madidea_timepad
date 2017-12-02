@@ -84,30 +84,5 @@ def get_events(params):
 
     return events
 
-def get_events_by_date(min_index, date=datetime.datetime.today().strftime('%Y-%m-%d'), city=''):
-    params = {
-        'starts_at_min': date + "T00:00:00+0300",
-        'starts_at_max': date + "T23:59:59+0300",
-        'access_statuses': "public",
-        'skip': min_index
-    }
-    if len(city) > 0:
-        params['cities'] = city
-    return get_events(params)
-
-def get_events_by_token(token, city):
-    response = requests.get(API_URL + '/introspect?token={0}'.format(token))
-    user_info = json.loads(response.text)
-    event_ids = [order['event']['id'] for order in user_info['orders']]
-
-    params = {
-        'event_ids': ','.join(str(id) for id in event_ids),
-        'starts_at_min': 'now',
-        'limit': 5
-    }
-    if len(city) > 0:
-        params['cities'] = city
-    return get_events(params)
-
 if __name__ == '__main__':
     print(get_events_by_token(TIMEPAD_TOKEN, 'Санкт-Петербург'))
