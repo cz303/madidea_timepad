@@ -7,7 +7,6 @@ from datetime import datetime
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
                     level=logging.INFO)
 
-
 def start(bot, update):
     bot.send_message(chat_id=update.message.chat_id,
                      text="Please, use /token command to set up your token")
@@ -45,17 +44,22 @@ def set_token(bot, update, args):
 
     connector = database.Connector()
     last_timestamp = 0
+    city = 'Без города'
     connector.add_user(data['user_id'], update.message.chat_id, update.message.from_user.username,
-                       data['user_email'], token, last_timestamp)
+                       data['user_email'], token, city, last_timestamp)
     bot.send_message(chat_id=update.message.chat_id, text='Connected!')
 
 
 def get_today_events(bot, update):
-    events = timepad.get_events_by_date()
+    connector = database.Connector()
+    city = connector.get_user_city(timepad.TIMEPAD_TOKEN)
+    events = timepad.get_events_by_date(city)
     bot.send_message(chat_id=update.message.chat_id, text="\n\n".join(events))
 
 def get_events_by_token(bot, update):
-    events = timepad.get_events_by_token(timepad.TIMEPAD_TOKEN)
+    connector = database.Connector()
+    city = connector.get_user_city(timepad.TIMEPAD_TOKEN)
+    events = timepad.get_events_by_token(timepad.TIMEPAD_TOKEN, city)
     bot.send_message(chat_id=update.message.chat_id, text="\n\n".join(events), parse_mode='Markdown')
 
 def echo(bot, update):
@@ -111,6 +115,7 @@ def subscribe(bot, update, users):
         bot.send_message(chat_id=update.message.chat_id, text='Unknown user! Ask him to add this bot')
     connector.add_subscription(subscribed_to, user_id)
     bot.send_message(chat_id=update.message.chat_id, text='Subscriber!')
+
 
 
 if __name__ == '__main__':

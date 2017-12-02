@@ -9,11 +9,11 @@ class Connector:
     def __init__(self):
         self.connection = get_connection()
 
-    def add_user(self, id, chat_id, tg_username, email, token, introspect_timestamp):
+    def add_user(self, id, chat_id, tg_username, email, token, cityName, introspect_timestamp):
         # TODO: catch exceptions
         c = self.connection.cursor()
-        c.execute('INSERT INTO users(id, chatId, telegramName, email, token, introspectTimestamp) VALUES ' +
-                  '(?, ?, ?, ?, ?, ?)', (id, chat_id, tg_username, email, token, introspect_timestamp))
+        c.execute('INSERT INTO users(id, chatId, telegramName, email, token, cityName, introspectTimestamp) VALUES ' +
+                  '(?, ?, ?, ?, ?, ?, ?)', (id, chat_id, tg_username, email, token, cityName, introspect_timestamp))
         self.connection.commit()
 
     def get_user_for_crawl(self):
@@ -68,6 +68,19 @@ class Connector:
                   'VALUES(?, ?)', (user_id, subscriber_id))
         self.connection.commit()
 
+    def set_city(self, user_token, city_name):
+        c = self.connection.cursor()
+        # FIXIT token --> id 
+        c.execute('UPDATE users set cityName = {0} where token = {1}'.format(city_name, user_token)) 
+        self.connection.commit()
+
+    def get_user_city(self, user_token):
+        c = self.connection.cursor()
+        # FIXIT token --> id 
+        c.execute('SELECT cityName FROM users WHERE token = ?', (user_token,))
+        city = map(lambda row: row[0], c.fetchall())
+        return city
+
 def init_db():
     conn = get_connection()
     c = conn.cursor()
@@ -78,7 +91,7 @@ def init_db():
 
     c.execute('CREATE TABLE users '
               '(id INTEGER PRIMARY KEY, chatId INTEGER, telegramName TEXT,'
-              'email TEXT, token TEXT, introspectTimestamp TIMESTAMP)')
+              'email TEXT, token TEXT, cityName TEXT, introspectTimestamp TIMESTAMP)')
     c.execute('CREATE TABLE users_events '
               '(userId INTEGER, eventId INTEGER, PRIMARY KEY(userId, eventId),'
               'FOREIGN KEY(userId) REFERENCES users(id))')

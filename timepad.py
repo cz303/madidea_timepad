@@ -41,7 +41,7 @@ def format_event_descr(event):
                             event["url"])
 	return event_repr
 
-def get_events_by_token(token):
+def get_events_by_token(token, city):
     response = requests.get(API_URL + '/introspect?token={0}'.format(token))
     user_info = json.loads(response.text)
     event_ids = [order['event']['id'] for order in user_info['orders']]
@@ -49,6 +49,7 @@ def get_events_by_token(token):
     response = requests.get(API_URL + '/v1/events', params={
         'event_ids': ','.join(str(id) for id in event_ids),
         'starts_at_min': 'now',
+        'cities': city,
         'limit': 5
     })
     if response.status_code != requests.codes.ok:
@@ -74,10 +75,11 @@ def introspect(token):
     return json.loads(response.text)
 
 
-def get_events_by_date(date=datetime.datetime.today().strftime('%Y-%m-%d')):
+def get_events_by_date(date=datetime.datetime.today().strftime('%Y-%m-%d'), city='Без города'):
     response = requests.get(API_URL + '/v1/events', params={
         'starts_at_min': date + "T00:00:00+0300",
         'starts_at_max': date + "T23:59:59+0300",
+        'cities': city,
         'access_statuses': "public",
         'limit': 5
     })
@@ -94,4 +96,4 @@ def get_events_by_date(date=datetime.datetime.today().strftime('%Y-%m-%d')):
 
 
 if __name__ == '__main__':
-    print(get_events_by_token(TIMEPAD_TOKEN))
+    print(get_events_by_token(TIMEPAD_TOKEN, 'Санкт-Петербург'))
