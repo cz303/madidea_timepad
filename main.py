@@ -173,9 +173,11 @@ def show_subscriptions_handler(bot, update):
     message = '\n'.join(['Подписки:'] + list('@' + subscribed['tg_name'] for subscribed in subscriptions))
     bot.send_message(chat_id=update.message.chat_id, text=message)
 
-
 if __name__ == '__main__':
-    updater = Updater(token='474743017:AAGBMDsYi0LciJFLT2HB9YOVABV1atOoboM')
+    with open('telegram.token', 'r') as tg:
+        token = tg.read()
+
+    updater = Updater(token=token)
     dispatcher = updater.dispatcher
     job_queue = updater.job_queue
 
