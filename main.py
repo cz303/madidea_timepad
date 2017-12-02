@@ -18,7 +18,8 @@ def start(bot, update):
     if user is None:
         connector.add_user(update.message.chat_id, update.message.from_user.username)
     bot.send_message(chat_id=update.message.chat_id,
-                     text="Великолепный бот\n Список всех команд: /help")
+                     text="Великолепный бот\nСписок всех команд: /help\nПолучить токен: "
+                          "https://dev.timepad.ru/api/oauth/")
 
 
 def has_token(func):
