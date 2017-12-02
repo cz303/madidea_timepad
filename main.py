@@ -89,9 +89,22 @@ def get_today_events(bot, update):
 @has_token
 def get_events_by_token(bot, update):
     connector = database.Connector()
+    events = timepad.get_events_by_token(timepad.TIMEPAD_TOKEN, '') 
+    bot.send_message(chat_id=update.message.chat_id, text='Твои события:\n' + "\n\n".join(events), parse_mode='Markdown')
+
+@has_token
+def get_events_by_city(bot, update):
+    connector = database.Connector()
     city = connector.get_city(timepad.TIMEPAD_TOKEN)  # FIXIT
-    events = timepad.get_events_by_token(timepad.TIMEPAD_TOKEN, city)  # FIXIT
-    bot.send_message(chat_id=update.message.chat_id, text="\n\n".join(events), parse_mode='Markdown')
+    events = []# timepad.get_events_by_token(timepad.TIMEPAD_TOKEN, city)  
+    bot.send_message(chat_id=update.message.chat_id, text='Все события в {0}:\n Нихуя пока что'.format(city) + "\n\n".join(events), parse_mode='Markdown')
+
+@has_token
+def get_events_by_city_and_token(bot, update):
+    connector = database.Connector()
+    city = connector.get_city(timepad.TIMEPAD_TOKEN)  # FIXIT
+    events = timepad.get_events_by_token(timepad.TIMEPAD_TOKEN, city)  
+    bot.send_message(chat_id=update.message.chat_id, text='Твои события в {0}:\n'.format(city) + "\n\n".join(events), parse_mode='Markdown')
 
 
 def echo(bot, update):
@@ -238,6 +251,12 @@ if __name__ == '__main__':
 
     events_by_token_handler = CommandHandler('my_events', get_events_by_token, pass_args=False)
     dispatcher.add_handler(events_by_token_handler)
+
+    events_by_city_handler = CommandHandler('local_events', get_events_by_city, pass_args=False)
+    dispatcher.add_handler(events_by_city_handler)
+
+    events_by_city_and_token_handler = CommandHandler('my_local_events', get_events_by_city_and_token, pass_args=False)
+    dispatcher.add_handler(events_by_city_and_token_handler)
 
     top_events_handler = CommandHandler('top', get_top_events, pass_args=True)
     dispatcher.add_handler(top_events_handler)
