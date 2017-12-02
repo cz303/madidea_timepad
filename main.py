@@ -38,8 +38,10 @@ def set_token(bot, update, args):
 def echo(bot, update):
     bot.send_message(chat_id=update.message.chat_id, text=update.message.text)
 
+
 def error_callback(bot, update, error):
     logging.warning(repr(error))
+
 
 def notify_subscribers(bot, user_id):
     connector = database.Connector()
@@ -48,6 +50,7 @@ def notify_subscribers(bot, user_id):
     for subscriber in subscribers:
         bot.send_message(chat_id=subscriber['chat_id'],
                          text='Yoba-Boba, your friend {} just subscribed to some shit'.format(str(user_id)))
+
 
 def crawl_new_events(bot, job):
     connector = database.Connector()
@@ -61,7 +64,12 @@ def crawl_new_events(bot, job):
     if len(new_events) > 0:
         notify_subscribers(bot, user['id'])
 
-
+def get_top_events(bot, update, args):
+    keywords = ','.join(args)
+    #top_events = timepad.get_top_events(keywords)
+    top_events = []
+    bot.send_message(chat_id=update.message.chat_id,
+                     text='Here is your top: {}'.format('. '.join(top_events)))
 
 if __name__ == '__main__':
     updater = Updater(token='474743017:AAGBMDsYi0LciJFLT2HB9YOVABV1atOoboM')
@@ -78,6 +86,9 @@ if __name__ == '__main__':
 
     token_handler = CommandHandler('token', set_token, pass_args=True)
     dispatcher.add_handler(token_handler)
+
+    top_events_handler = CommandHandler('top', get_top_events, pass_args=True)
+    dispatcher.add_handler(top_events_handler)
 
     job_queue.run_repeating(crawl_new_events, interval=3, first=0)
 
