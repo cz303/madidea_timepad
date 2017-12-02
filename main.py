@@ -41,9 +41,32 @@ def echo(bot, update):
 def error_callback(bot, update, error):
     logging.warning(repr(error))
 
+def notify_subscribers(bot, user_id):
+    connector = database.Connector()
+    subscribers = connector.get_subscribers(user_id)
+
+    for subscriber in subscribers:
+        bot.send_message(chat_id=subscriber['chat_id'],
+                         text='Yoba-Boba, your friend {} just subscribed to some shit'.format(str(user_id)))
+
+def crawl_new_events(bot, job):
+    connector = database.Connector()
+    user = connector.get_user_for_crawl()
+    if user is None:
+        return
+    # magic function to get new user events
+    events = set()
+    old_events = connector.get_user_events()
+    new_events = events - old_events
+    if len(new_events) > 0:
+        notify_subscribers(bot, user['id'])
+
+
+
 if __name__ == '__main__':
     updater = Updater(token='474743017:AAGBMDsYi0LciJFLT2HB9YOVABV1atOoboM')
     dispatcher = updater.dispatcher
+    job_queue = updater.job_queue
 
     dispatcher.add_error_handler(error_callback)
 
@@ -55,5 +78,7 @@ if __name__ == '__main__':
 
     token_handler = CommandHandler('token', set_token, pass_args=True)
     dispatcher.add_handler(token_handler)
+
+    job_queue.run_repeating(crawl_new_events, interval=3, first=0)
 
     updater.start_polling()
