@@ -238,11 +238,12 @@ def show_subscriptions_handler(bot, update):
 def show_help(bot, update):
     help_msg = ('*Timepad Bot*\n'
         '_Команды_: \n'
-        '/token <ваш TimePad токен> -- связать бота с аккаунтом Timepad\n'
+        '/token <TimePad token> -- связать бота с аккаунтом Timepad\n'
         '/city -- узнать текущий город\n'
         '/city <название города> -- установить город\n'
         '/events -- показать события, используя различные фильтры\n'
         '/top -- показать самые популярные события\n'
+        '/top <keyword> -- показать самые популярные события для ключевого слова\n'
         '/subscribe <Telegram username> -- подписаться на обновления @username\n'
         '/unsubscribe <Telegram username> -- отписаться от обновлений @username\n'
         '/subscriptions -- показать список подписок\n'
