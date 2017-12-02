@@ -55,8 +55,8 @@ def get_today_events(bot, update):
     bot.send_message(chat_id=update.message.chat_id, text="\n\n".join(events))
 
 def get_events_by_token(bot, update):
-    events = timepad.get_events_by_token()
-    bot.send_message(chat_id=update.message.chat_id, text="\n\n".join(events))
+    events = timepad.get_events_by_token(timepad.TIMEPAD_TOKEN)
+    bot.send_message(chat_id=update.message.chat_id, text="\n\n".join(events), parse_mode='Markdown')
 
 def echo(bot, update):
     bot.send_message(chat_id=update.message.chat_id, text=update.message.text)

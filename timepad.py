@@ -30,6 +30,15 @@ def get_user_events(user_token):
     #    ','.join(str(id) for id in event_ids))).text)
     return event_ids
 
+def format_event_descr(event):
+	event_repr = ("Что? *{0}*\n"
+		"А глобально? _{1}_\n"
+		"Когда? _{2}_\n"
+		"Подробнее: {3}").format(event["name"],
+                            ', '.join(cat["name"] for cat in event["categories"]),
+                            ", ".join(event["starts_at"].split('+')[0].split("T")),
+                            event["url"])
+	return event_repr
 
 def get_events_by_token(token):
     response = requests.get(API_URL + '/introspect?token={0}'.format(token))
@@ -48,15 +57,9 @@ def get_events_by_token(token):
 
     events = []
     for event in json.loads(response.text)["values"]:
-        event_repr = "Что? {}\n Что-что? {}\n Когда? {}\n Подробнее: {}".format(event["name"],
-                                                                                event["categories"][0]["name"],
-                                                                                ", ".join(
-                                                                                    event["starts_at"].split("T")),
-                                                                                event["url"])
-        events.append(event_repr)
+        events.append(format_event_descr(event))
 
     return events
-
 
 def introspect(token):
     payload = {
@@ -84,12 +87,7 @@ def get_events_by_date(date=datetime.datetime.today().strftime('%Y-%m-%d')):
 
     events = []
     for event in json.loads(response.text)["values"]:
-        event_repr = "Что? {}\n Что-что? {}\n Когда? {}\n Подробнее: {}".format(event["name"],
-                                                                                event["categories"][0]["name"],
-                                                                                ", ".join(
-                                                                                    event["starts_at"].split("T")),
-                                                                                event["url"])
-        events.append(event_repr)
+        events.append(format_event_descr(event))
 
     return events
 
