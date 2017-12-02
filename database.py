@@ -29,7 +29,7 @@ class Connector:
 
     def get_subscribers(self, user_id):
         c = self.connection.cursor()
-        c.execute('SELECT subscriberId FROM subscription WHERE userId = ?', user_id)
+        c.execute('SELECT subscriberId FROM subscriptions WHERE userId = ?', (user_id,))
         result = map(lambda row: row[0], c.fetchall())
         return result
 
@@ -38,6 +38,12 @@ class Connector:
         c.execute('SELECT eventId FROM users_events WHERE userId = ?', (user_id,))
         events = map(lambda row: row[0], c.fetchall())
         return events
+
+    def add_user_events(self, user_id, events):
+        c = self.connection.cursor()
+        user_events = map(lambda event: (user_id, event), events)
+        c.executemany('INSERT OR IGNORE INTO users_events(userId, eventId) VALUES (?, ?)', user_events)
+        self.connection.commit()
 
     def get_user_by_chat_id(self, chat_id):
         c = self.connection.cursor()
@@ -70,13 +76,16 @@ def init_db():
     c.execute('DROP TABLE IF EXISTS users_events')
     c.execute('DROP TABLE IF EXISTS users')
 
-    c.execute('CREATE TABLE users ' +
-              '(id INTEGER PRIMARY KEY, chatId INTEGER, telegramName TEXT,' +
+    c.execute('CREATE TABLE users '
+              '(id INTEGER PRIMARY KEY, chatId INTEGER, telegramName TEXT,'
               'email TEXT, token TEXT, introspectTimestamp TIMESTAMP)')
-    c.execute('CREATE TABLE users_events ' +
-              '(userId INTEGER, eventId INTEGER, PRIMARY KEY(userId, eventId))')
-    c.execute('CREATE TABLE subscriptions ' +
-              '(userId INTEGER, subscriberId INTEGER, PRIMARY KEY(userId, subscriberId))')
+    c.execute('CREATE TABLE users_events '
+              '(userId INTEGER, eventId INTEGER, PRIMARY KEY(userId, eventId),'
+              'FOREIGN KEY(userId) REFERENCES users(id))')
+    c.execute('CREATE TABLE subscriptions '
+              '(userId INTEGER, subscriberId INTEGER, PRIMARY KEY(userId, subscriberId),'
+              'FOREIGN KEY(userId) REFERENCES users(id),'
+              'FOREIGN KEY(subscriberId) REFERENCES users(id))')
 
 
 if __name__ == '__main__':

@@ -80,14 +80,13 @@ def crawl_new_events(bot, job):
     user = connector.get_user_for_crawl()
     if user is None:
         return
-    # magic function to get new user events
-    events = set()
+    events = set(timepad.get_user_events(user['token']))
     old_events = set(connector.get_user_events(user['id']))
     new_events = events - old_events
-    #logging.info('{} vs {}'.format(repr(old_events), repr(new_events)))
     if len(new_events) > 0:
         logging.info('Notifying subscribers of {}'.format(str(user['id'])))
         notify_subscribers(bot, user['id'])
+        connector.add_user_events(user['id'], new_events)
 
 @has_token
 def get_top_events(bot, update, args):
@@ -138,6 +137,9 @@ if __name__ == '__main__':
 
     top_events_handler = CommandHandler('top', get_top_events, pass_args=True)
     dispatcher.add_handler(top_events_handler)
+
+    subscribe_handler = CommandHandler('subscribe', subscribe, pass_args=True)
+    dispatcher.add_handler(subscribe_handler)
 
     job_queue.run_repeating(crawl_new_events, interval=3, first=0)
 
