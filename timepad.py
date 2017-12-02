@@ -30,27 +30,51 @@ def get_user_events(user_token):
     #    ','.join(str(id) for id in event_ids))).text)
     return event_ids
 
-def format_event_descr(event):
-	event_repr = ("Что? *{0}*\n"
-		"А глобально? _{1}_\n"
-		"Когда? _{2}_\n"
-		"[Подробнее]({3})\n"
-		"[Регистрация]({3}#register)").format(event["name"],
-                            ', '.join(cat["name"] for cat in event["categories"]),
-                            ", ".join(event["starts_at"].split('+')[0].split("T")),
-                            event["url"])
-	return event_repr
 
-def get_events_by_token(token):
+def get_events_data(ids):
+    response = requests.get(API_URL + '/v1/events/?event_ids={0}&access_statuses=public'.format(
+        ','.join(map(str, ids))))
+    data = json.loads(response.text)
+    return data['values']
+
+def get_top_events(keywords):
+    payload = {
+        'fields': 'registration_data',
+        'keywords': ','.join(keywords),
+        'limit': 100
+    }
+    response = requests.get(API_URL + '/v1/events/', params=payload)
+    logging.info(response.text)
+    events = json.loads(response.text)['values']
+    events.sort(key=lambda event: -event['registration_data']['tickets_total'])
+    return events[:3]
+
+def format_event_descr(event):
+    event_repr = ("Что? *{0}*\n"
+                  "А глобально? _{1}_\n"
+                  "Когда? _{2}_\n"
+                  "[Подробнее]({3})\n"
+                  "[Регистрация]({3}#register)").format(event["name"],
+                                                        ', '.join(cat["name"] for cat in event["categories"]),
+                                                        ", ".join(event["starts_at"].split('+')[0].split("T")),
+                                                        event["url"])
+    return event_repr
+
+
+def get_events_by_token(token, city):
     response = requests.get(API_URL + '/introspect?token={0}'.format(token))
     user_info = json.loads(response.text)
     event_ids = [order['event']['id'] for order in user_info['orders']]
 
-    response = requests.get(API_URL + '/v1/events', params={
+    params = {
         'event_ids': ','.join(str(id) for id in event_ids),
         'starts_at_min': 'now',
         'limit': 5
-    })
+    }
+    if len(city) > 0:
+        params['cities'] = city
+    print(params)
+    response = requests.get(API_URL + '/v1/events', params=params)
     if response.status_code != requests.codes.ok:
         logging.warning('Got non-200 response from API: {}'.format(str(response.status_code)))
         logging.warning(response.text)
@@ -61,6 +85,7 @@ def get_events_by_token(token):
         events.append(format_event_descr(event))
 
     return events
+
 
 def introspect(token):
     payload = {
@@ -74,13 +99,16 @@ def introspect(token):
     return json.loads(response.text)
 
 
-def get_events_by_date(min_index, date=datetime.datetime.today().strftime('%Y-%m-%d')):
-    response = requests.get(API_URL + '/v1/events', params={
+def get_events_by_date(min_index, date=datetime.datetime.today().strftime('%Y-%m-%d'), city=''):
+    params = {
         'starts_at_min': date + "T00:00:00+0300",
         'starts_at_max': date + "T23:59:59+0300",
         'access_statuses': "public",
         'skip': min_index
-    })
+    }
+    if len(city) > 0:
+        params['cities'] = city
+    response = requests.get(API_URL + '/v1/events', params=params)
     if response.status_code != requests.codes.ok:
         logging.warning('Got non-200 response from API: {}'.format(str(response.status_code)))
         logging.warning(response.text)
@@ -94,4 +122,4 @@ def get_events_by_date(min_index, date=datetime.datetime.today().strftime('%Y-%m
 
 
 if __name__ == '__main__':
-    print(get_events_by_token(TIMEPAD_TOKEN))
+    print(get_events_by_token(TIMEPAD_TOKEN, 'Санкт-Петербург'))
