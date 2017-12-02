@@ -9,6 +9,14 @@ def start(bot, update):
     bot.send_message(chat_id=update.message.chat_id, text="I'm a bot, please talk to me!")
 
 
+def set_token(bot, update, args):
+    logging.info('Got args {} from {}'.format(repr(args), update.message.chat_id))
+    if len(args) != 1:
+        bot.send_message(chat_id=update.message.chat_id, text="Use /token <your TimePad token>")
+        return
+    token = args[0]
+
+
 def echo(bot, update):
     bot.send_message(chat_id=update.message.chat_id, text=update.message.text)
 
@@ -22,5 +30,8 @@ if __name__ == '__main__':
 
     echo_handler = MessageHandler(Filters.text, echo)
     dispatcher.add_handler(echo_handler)
+
+    token_handler = CommandHandler('token', set_token, pass_args=True)
+    dispatcher.add_handler(token_handler)
 
     updater.start_polling()
