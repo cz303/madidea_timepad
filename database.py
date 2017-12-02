@@ -84,16 +84,16 @@ class Connector:
         result = map(lambda row: {'tg_name': row[0]}, c.fetchall())
         return list(result)
 
-    def set_city(self, user_token, city_name):
+    def set_city(self, user_id, city_name):
         c = self.connection.cursor()
         # FIXIT token --> id 
-        c.execute('UPDATE users set cityName = {0} where token = {1}'.format(city_name, user_token)) 
+        c.execute('UPDATE users SET cityName = ? WHERE token = ?', (city_name, user_id))
         self.connection.commit()
 
-    def get_user_city(self, user_token):
+    def get_user_city(self, user_id):
         c = self.connection.cursor()
         # FIXIT token --> id 
-        c.execute('SELECT cityName FROM users WHERE token = ?', (user_token,))
+        c.execute('SELECT cityName FROM users WHERE token = ?', (user_id,))
         city = map(lambda row: row[0], c.fetchall())
         return list(city)
 

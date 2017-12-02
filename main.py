@@ -43,7 +43,7 @@ def set_token(bot, update, args):
 
     connector = database.Connector()
     last_timestamp = 0
-    city = prompt_city(bot, update)
+    city = ''
 
     connector.add_user(data['user_id'], update.message.chat_id, update.message.from_user.username,
                        data['user_email'], token, city, last_timestamp)
@@ -60,6 +60,7 @@ def get_today_events(bot, update):
 def get_events_by_token(bot, update):
     connector = database.Connector()
     city = connector.get_user_city(timepad.TIMEPAD_TOKEN) # FIXIT
+    logging.info(city)
     events = timepad.get_events_by_token(timepad.TIMEPAD_TOKEN, city) # FIXIT
     bot.send_message(chat_id=update.message.chat_id, text="\n\n".join(events), parse_mode='Markdown')
 
@@ -76,8 +77,6 @@ def set_city(bot, update, args):
     bot.send_message(chat_id=update.message.chat_id,
                      text='Ok, you are in {}'.format('. '.join(city)))
 
-
-@has_token
 def notify_subscribers(bot, user, new_events):
     connector = database.Connector()
     subscribers = connector.get_subscribers(user['id'])
