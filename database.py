@@ -124,6 +124,17 @@ class Connector:
             }
         return None
 
+    def get_top_friend_events(self, user_id):
+        c = self.connection.cursor()
+        c.execute('SELECT users_events.eventId, COUNT(users.id) FROM users '
+                  'INNER JOIN subscriptions '
+                  'ON users.id = subscriptions.userId AND subscriptions.subscriberId = ? '
+                  'INNER JOIN users_events ON users.id = users_events.userId '
+                  'GROUP BY users_events.eventId '
+                  'ORDER BY COUNT(users.id) DESC ', (user_id,))
+        result = c.fetchall()
+        return list(map(lambda row: {'event_id': row[0], 'count': row[1]}, result))
+
 def init_db():
     conn = get_connection()
     c = conn.cursor()

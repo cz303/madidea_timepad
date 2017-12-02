@@ -18,7 +18,8 @@ def start(bot, update):
     if user is None:
         connector.add_user(update.message.chat_id, update.message.from_user.username)
     bot.send_message(chat_id=update.message.chat_id,
-                     text="Великолепный бот\n Список всех команд: /help")
+                     text="Великолепный бот\nСписок всех команд: /help\nПолучить токен: "
+                          "https://dev.timepad.ru/api/oauth/")
 
 
 def has_token(func):
@@ -165,8 +166,14 @@ def crawl_new_events(bot, job):
 
 
 def get_top_events(bot, update, args):
-    top_events = timepad.get_top_events(args)
-    message = '\n'.join(['Топ:'] + list(map(lambda event: event['url'], top_events)))
+    connector = database.Connector()
+    user = connector.get_user_by_chat_id(update.message.chat_id)
+    top_events = connector.get_top_friend_events(user['id'])
+    event_scores = dict((event['event_id'], event['count']) for event in top_events)
+    found_events = timepad.find_events(event_scores.keys(), args)
+    if len(top_events) > 0:
+        found_events.sort(key=lambda event: -event_scores[event['id']])
+    message = '\n'.join(['Топ:'] + list(map(lambda event: '{}: {}'.format(event['url'], event['name']), found_events)))
     bot.send_message(chat_id=update.message.chat_id,
                      text=message)
 
