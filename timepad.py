@@ -16,9 +16,10 @@ def get_user_events(user_token):
 	return event_ids
 
 def introspect(token):
-    response = requests.get(API_URL + '/introspect', params={
+    payload = {
         'token': token
-    })
+    }
+    response = requests.get(API_URL + '/introspect', params=payload)
     if response.status_code != requests.codes.ok:
         logging.warning('Got non-200 response from API: {}'.format(str(response.status_code)))
         logging.warning(response.text)
