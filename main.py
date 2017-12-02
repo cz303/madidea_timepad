@@ -170,7 +170,7 @@ def show_subscriptions_handler(bot, update):
 
 
 if __name__ == '__main__':
-    updater = Updater(token='467230576:AAEK7jNpT6y_r2BnEp4nOWy96ZA1FyocyaM')
+    updater = Updater(token='474743017:AAGBMDsYi0LciJFLT2HB9YOVABV1atOoboM')
     dispatcher = updater.dispatcher
     job_queue = updater.job_queue
 
