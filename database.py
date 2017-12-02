@@ -98,15 +98,13 @@ class Connector:
 
     def set_city(self, user_id, city_name):
         c = self.connection.cursor()
-        # FIXIT token --> id 
-        c.execute('UPDATE users SET cityName = ? WHERE token = ?', (city_name, user_id))
+        c.execute('UPDATE users SET cityName = ? WHERE id = ?', (city_name, user_id))
         print(city_name, 'set', user_id)
         self.connection.commit()
 
     def get_city(self, user_id):
         c = self.connection.cursor()
-        # FIXIT token --> id 
-        c.execute('SELECT cityName FROM users WHERE token = ?', (user_id,))
+        c.execute('SELECT cityName FROM users WHERE id = ?', (user_id,))
         city = map(lambda row: row[0], c.fetchall())
         return ' '.join(list(city))
 

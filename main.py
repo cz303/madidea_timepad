@@ -96,17 +96,16 @@ def echo(bot, update):
 def error_callback(bot, update, error):
     logging.warning(repr(error))
 
-@has_token
 def set_city(bot, update, args):
     connector = database.Connector()
     user = connector.get_user_by_chat_id(update.message.chat_id)
     if len(args) == 0:
-        city = connector.get_city(user['token'])
+        city = connector.get_city(user['id'])
         bot.send_message(chat_id=update.message.chat_id,
                          text='Ты в городе {}'.format(city))
     else:
         city = str(*args)
-        connector.set_city(user['token'], city)
+        connector.set_city(user['id'], city)
         bot.send_message(chat_id=update.message.chat_id,
                          text='Теперь ты в городе {}'.format(city))
 
@@ -191,7 +190,7 @@ def button_more_callback(bot, update):
         get_events_by_params(bot, update)
         return
     if "local" in query.data:
-        city = connector.get_city(user['token'])
+        city = connector.get_city(user['id'])
         if len(city) > 0:
             parameters['cities'] = city
     if "today" in query.data:
