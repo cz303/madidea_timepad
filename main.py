@@ -43,7 +43,8 @@ def set_token(bot, update, args):
 
     connector = database.Connector()
     last_timestamp = 0
-    city = 'Без города'
+    city = prompt_city(bot, update)
+
     connector.add_user(data['user_id'], update.message.chat_id, update.message.from_user.username,
                        data['user_email'], token, city, last_timestamp)
     bot.send_message(chat_id=update.message.chat_id, text='Успех!')
@@ -65,6 +66,10 @@ def get_events_by_token(bot, update):
 def echo(bot, update):
     bot.send_message(chat_id=update.message.chat_id, text=update.message.text)
 
+def prompt_city(bot, update):
+    bot.send_message(chat_id=update.message.chat_id,
+                     text='Where are you?')
+    return "Москва"
 
 def error_callback(bot, update, error):
     logging.warning(repr(error))
