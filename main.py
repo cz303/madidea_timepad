@@ -130,10 +130,10 @@ def crawl_new_events(bot, job):
 
 
 def get_top_events(bot, update, args):
-    keywords = ','.join(args)
-    top_events = timepad.get_top_events(keywords)
+    top_events = timepad.get_top_events(args)
+    message = '\n'.join(['Топ:'] + list(map(lambda event: event['url'], top_events)))
     bot.send_message(chat_id=update.message.chat_id,
-                     text='Топ: {}'.format('. '.join(top_events)))
+                     text=message)
 
 
 def subscribe(bot, update, args):

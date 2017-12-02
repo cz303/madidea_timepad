@@ -38,7 +38,16 @@ def get_events_data(ids):
     return data['values']
 
 def get_top_events(keywords):
-    return []
+    payload = {
+        'fields': 'registration_data',
+        'keywords': ','.join(keywords),
+        'limit': 100
+    }
+    response = requests.get(API_URL + '/v1/events/', params=payload)
+    logging.info(response.text)
+    events = json.loads(response.text)['values']
+    events.sort(key=lambda event: -event['registration_data']['tickets_total'])
+    return events[:3]
 
 def format_event_descr(event):
     event_repr = ("Что? *{0}*\n"
