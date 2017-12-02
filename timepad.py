@@ -53,9 +53,9 @@ def find_events(events, keywords):
     return events[:3]
 
 def format_event_descr(event):
-    event_repr = ("Что? *{0}*\n"
-                  "А глобально? _{1}_\n"
-                  "Когда? _{2}_\n"
+    event_repr = ("_Что?_ *{0}*\n"
+                  "_А глобально?_ {1}\n"
+                  "_Когда?_ {2}\n"
                   "[Подробнее]({3})\n"
                   "[Регистрация]({3}#register)\n---").format(event["name"],
                                                         ', '.join(cat["name"] for cat in event["categories"]),
