@@ -49,6 +49,17 @@ def get_top_events(keywords):
     events.sort(key=lambda event: -event['registration_data']['tickets_total'])
     return events[:3]
 
+def introspect(token):
+    payload = {
+        'token': token
+    }
+    response = requests.get(API_URL + '/introspect', params=payload)
+    if response.status_code != requests.codes.ok:
+        logging.warning('Got non-200 response from API: {}'.format(str(response.status_code)))
+        logging.warning(response.text)
+        return None
+    return json.loads(response.text)
+
 def format_event_descr(event):
     event_repr = ("Что? *{0}*\n"
                   "А глобально? _{1}_\n"
@@ -60,6 +71,29 @@ def format_event_descr(event):
                                                         event["url"])
     return event_repr
 
+def get_events(params):
+    response = requests.get(API_URL + '/v1/events', params=params)
+    if response.status_code != requests.codes.ok:
+        logging.warning('Got non-200 response from API: {}'.format(str(response.status_code)))
+        logging.warning(response.text)
+        return []
+
+    events = []
+    for event in json.loads(response.text)["values"]:
+        events.append(format_event_descr(event))
+
+    return events
+
+def get_events_by_date(min_index, date=datetime.datetime.today().strftime('%Y-%m-%d'), city=''):
+    params = {
+        'starts_at_min': date + "T00:00:00+0300",
+        'starts_at_max': date + "T23:59:59+0300",
+        'access_statuses': "public",
+        'skip': min_index
+    }
+    if len(city) > 0:
+        params['cities'] = city
+    return get_events(params)
 
 def get_events_by_token(token, city):
     response = requests.get(API_URL + '/introspect?token={0}'.format(token))
@@ -73,53 +107,7 @@ def get_events_by_token(token, city):
     }
     if len(city) > 0:
         params['cities'] = city
-    print(params)
-    response = requests.get(API_URL + '/v1/events', params=params)
-    if response.status_code != requests.codes.ok:
-        logging.warning('Got non-200 response from API: {}'.format(str(response.status_code)))
-        logging.warning(response.text)
-        return []
-
-    events = []
-    for event in json.loads(response.text)["values"]:
-        events.append(format_event_descr(event))
-
-    return events
-
-
-def introspect(token):
-    payload = {
-        'token': token
-    }
-    response = requests.get(API_URL + '/introspect', params=payload)
-    if response.status_code != requests.codes.ok:
-        logging.warning('Got non-200 response from API: {}'.format(str(response.status_code)))
-        logging.warning(response.text)
-        return None
-    return json.loads(response.text)
-
-
-def get_events_by_date(min_index, date=datetime.datetime.today().strftime('%Y-%m-%d'), city=''):
-    params = {
-        'starts_at_min': date + "T00:00:00+0300",
-        'starts_at_max': date + "T23:59:59+0300",
-        'access_statuses': "public",
-        'skip': min_index
-    }
-    if len(city) > 0:
-        params['cities'] = city
-    response = requests.get(API_URL + '/v1/events', params=params)
-    if response.status_code != requests.codes.ok:
-        logging.warning('Got non-200 response from API: {}'.format(str(response.status_code)))
-        logging.warning(response.text)
-        return []
-
-    events = []
-    for event in json.loads(response.text)["values"]:
-        events.append(format_event_descr(event))
-
-    return events
-
+    return get_events(params)
 
 if __name__ == '__main__':
     print(get_events_by_token(TIMEPAD_TOKEN, 'Санкт-Петербург'))
