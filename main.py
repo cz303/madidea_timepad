@@ -14,13 +14,15 @@ def start(bot, update):
 
 
 def has_token(func):
-    def func_wrapper(**args):
+    def func_wrapper(*args, **kwargs):
+        bot = args[0]
+        update = args[1]
         connector = database.Connector()
-        user = connector.get_user_by_chat_id(args['update'].message.chat_id)
+        user = connector.get_user_by_chat_id(update.message.chat_id)
         if user is None:
-            args['bot'].send_message(chat_id=args['update'].message.chat_id, text='Set up your token first')
+            bot.send_message(chat_id=update.message.chat_id, text='Set up your token first')
             return
-        func(**args)
+        func(*args, **kwargs)
 
     return func_wrapper
 
@@ -80,9 +82,11 @@ def crawl_new_events(bot, job):
         return
     # magic function to get new user events
     events = set()
-    old_events = connector.get_user_events()
+    old_events = set(connector.get_user_events(user['id']))
     new_events = events - old_events
+    #logging.info('{} vs {}'.format(repr(old_events), repr(new_events)))
     if len(new_events) > 0:
+        logging.info('Notifying subscribers of {}'.format(str(user['id'])))
         notify_subscribers(bot, user['id'])
 
 @has_token

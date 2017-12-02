@@ -13,7 +13,8 @@ class Connector:
         # TODO: catch exceptions
         c = self.connection.cursor()
         c.execute('INSERT INTO users(id, chatId, telegramName, email, token, introspectTimestamp) VALUES ' +
-                  '(?, ?, ?, ?, ?)', (id, chat_id, tg_username, email, token, introspect_timestamp))
+                  '(?, ?, ?, ?, ?, ?)', (id, chat_id, tg_username, email, token, introspect_timestamp))
+        self.connection.commit()
 
     def get_user_for_crawl(self):
         c = self.connection.cursor()
@@ -34,13 +35,13 @@ class Connector:
 
     def get_user_events(self, user_id):
         c = self.connection.cursor()
-        c.execute('SELECT eventId FROM users_events WHERE userId = ?', user_id)
+        c.execute('SELECT eventId FROM users_events WHERE userId = ?', (user_id,))
         events = map(lambda row: row[0], c.fetchall())
         return events
 
     def get_user_by_chat_id(self, chat_id):
         c = self.connection.cursor()
-        c.execute('SELECT id FROM users WHERE chatId = ?', chat_id)
+        c.execute('SELECT id FROM users WHERE chatId = ?', (chat_id,))
         result = c.fetchone()
         if result is not None:
             return result[0]
@@ -49,7 +50,7 @@ class Connector:
     def get_user_by_telegram(self, login):
         return None
         c = self.connection.cursor()
-        c.execute('SELECT id FROM users WHERE telegramName = ?', login)
+        c.execute('SELECT id FROM users WHERE telegramName = ?', (login,))
         result = c.fetchone()
         if result is not None:
             return result[0]
@@ -59,6 +60,7 @@ class Connector:
         c = self.connection.cursor()
         c.execute('INSERT INTO subscriptions(userId, subscriberId) ' +
                   'VALUES(?, ?)', (user_id, subscriber_id))
+        self.connection.commit()
 
 def init_db():
     conn = get_connection()
@@ -69,7 +71,7 @@ def init_db():
     c.execute('DROP TABLE IF EXISTS users')
 
     c.execute('CREATE TABLE users ' +
-              '(id INTEGER PRIMARY KEY, chatId TEXT, telegramName TEXT,' +
+              '(id INTEGER PRIMARY KEY, chatId INTEGER, telegramName TEXT,' +
               'email TEXT, token TEXT, introspectTimestamp TIMESTAMP)')
     c.execute('CREATE TABLE users_events ' +
               '(userId INTEGER, eventId INTEGER, PRIMARY KEY(userId, eventId))')
