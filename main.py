@@ -9,11 +9,12 @@ logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s
 
 
 def start(bot, update):
+    connector = database.Connector()
+    user = connector.get_user_by_chat_id(update.message.chat_id)
+    if user is None:
+        connector.add_user(update.message.chat_id, update.message.from_user.username)
     bot.send_message(chat_id=update.message.chat_id,
                      text="Великолепный бот")
-    connector = database.Connector()
-    connector.add_user(None, update.message.chat_id, update.message.from_user.username,
-                       None, None, None, None)
 
 
 def has_token(func):
@@ -50,6 +51,9 @@ def set_token(bot, update, args):
 
     connector.set_timepad_data_for_chat_id(update.message.chat_id, data['user_id'],
                                            data['user_email'], token, city, last_timestamp)
+    events = timepad.get_user_events(token)
+    user = connector.get_user_by_chat_id(update.message.chat_id)
+    connector.add_user_events(user['id'], events)
     bot.send_message(chat_id=update.message.chat_id, text='Успех')
 
 
@@ -82,6 +86,7 @@ def set_city(bot, update, args):
     connector.set_city(timepad.TIMEPAD_TOKEN, city)  # FIXIT
     bot.send_message(chat_id=update.message.chat_id,
                      text='Ok, you are in {}'.format(city))
+
 
 def notify_subscribers(bot, user, new_events):
     connector = database.Connector()

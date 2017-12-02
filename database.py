@@ -9,13 +9,13 @@ class Connector:
     def __init__(self):
         self.connection = get_connection()
 
-    def add_user(self, id, chat_id, tg_username, email, token, cityName, introspect_timestamp):
+    def add_user(self, chat_id, tg_username):
         # TODO: catch exceptions
         tg_username = tg_username.lower()
         c = self.connection.cursor()
-        c.execute('INSERT INTO users(timepadId, chatId, telegramName, email, token, cityName, introspectTimestamp) '
-                  'VALUES (?, ?, ?, ?, ?, ?, ?)',
-                  (id, chat_id, tg_username, email, token, cityName, introspect_timestamp))
+        c.execute('INSERT INTO users(chatId, telegramName) '
+                  'VALUES (?, ?)',
+                  (chat_id, tg_username))
         self.connection.commit()
 
     def get_user_for_crawl(self):
@@ -63,8 +63,9 @@ class Connector:
 
     def set_timepad_data_for_chat_id(self, chat_id, timepad_id, email, token, city, last_timestamp):
         c = self.connection.cursor()
-        c.execute('UPDATE users SET timepadId = ?, email = ?, token = ?, cityName = ?, last_timestamp = ? '
+        c.execute('UPDATE users SET timepadId = ?, email = ?, token = ?, cityName = ?, introspectTimestamp = ? '
                   'WHERE chatId = ?', (timepad_id, email, token, city, last_timestamp, chat_id))
+        self.connection.commit()
 
     def get_user_by_telegram(self, login):
         login = login.lower()
