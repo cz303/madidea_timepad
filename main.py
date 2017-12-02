@@ -105,6 +105,7 @@ def set_city(bot, update, args):
     if len(args) == 0:
         connector = database.Connector()
         city = connector.get_city(timepad.TIMEPAD_TOKEN)  # FIXIT
+        print(city)
         bot.send_message(chat_id=update.message.chat_id,
                          text='Ты в городе {}'.format(city))
     else:
