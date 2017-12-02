@@ -224,7 +224,18 @@ def show_subscriptions_handler(bot, update):
     bot.send_message(chat_id=update.message.chat_id, text=message)
 
 def show_help(bot, update):
-    bot.send_message(chat_id=update.message.chat_id, text='Иди на хуй пока что')
+    help_msg = ('*Timepad Bot*\n'
+        '_Команды_: \n'
+        '/token <ваш TimePad токен> -- связать бота с аккаунтом Timepad\n'
+        '/city -- узнать текущий город\n'
+        '/city <название города> -- установить город\n'
+        '/events -- показать события, используя различные фильтры\n'
+        '/top -- показать самые популярные события\n'
+        '/subscribe <Telegram username> -- подписаться на обновления @username\n'
+        '/unsubscribe <Telegram username> -- отписаться от обновлений @username\n'
+        '/subscriptions -- показать список подписок\n'
+        '/help -- показать справку')
+    bot.send_message(chat_id=update.message.chat_id, text=help_msg, parse_mode='Markdown')
 
 
 if __name__ == '__main__':
