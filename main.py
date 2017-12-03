@@ -182,6 +182,7 @@ def subscribe(bot, update, args):
 def button_more_callback(bot, update):
     query = update.callback_query
     parameters = { 'access_statuses': "public",
+                    'fields': 'location',
                     'limit': 100 }
     update.message = query.message
     connector = database.Connector()

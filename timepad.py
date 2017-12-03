@@ -17,7 +17,7 @@ def get_all_user_events(user_token):
             logging.warning('Private event: {0}'.format(event_id))
             continue
         event_info = json.loads(response.text)
-        print(event_info['name'])
+        # print(event_info['name'])
     return event_ids
 
 
@@ -38,7 +38,7 @@ def get_events_data(ids):
 
 def find_events(events, keywords):
     payload = {
-        'fields': 'registration_data',
+        'fields': 'registration_data,location',
         'limit': 100
     }
     if len(keywords) > 0:
@@ -55,12 +55,14 @@ def find_events(events, keywords):
 def format_event_descr(event):
     event_repr = ("_Что?_  *{0}*\n"
                   "_А глобально?_  {1}\n"
+                  "_Где?_ {4}\n"
                   "_Когда?_  {2}\n"
                   "[Подробнее]({3})\n"
                   "[Регистрация]({3}#register)\n---").format(event["name"],
                                                         ', '.join(cat["name"] for cat in event["categories"]),
                                                         ", ".join(event["starts_at"].split('+')[0].split("T")),
-                                                        event["url"])
+                                                        event["url"],
+                                                        event['location']['city'])
     return event_repr
 
 def get_events(params):
