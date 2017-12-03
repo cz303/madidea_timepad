@@ -193,7 +193,7 @@ def button_more_callback(bot, update):
     else:
         user_last_queries.clear()
     if "local" in query.data:
-        if 'token' not in user:
+        if user['token'] is None:
             bot.send_message(chat_id=update.message.chat_id, text='Сначала установи токен')
             return
         city = connector.get_city(user['id'])
@@ -204,7 +204,7 @@ def button_more_callback(bot, update):
         parameters['starts_at_min'] = date + "T00:00:00+0300"
         parameters['starts_at_max'] = date + "T23:59:59+0300"
     if "my" in query.data:
-        if 'token' not in user:
+        if user['token'] is None:
             bot.send_message(chat_id=update.message.chat_id, text='Сначала установи токен')
             return
         my_token = user['token']
