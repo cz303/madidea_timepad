@@ -52,12 +52,13 @@ class Connector:
 
     def get_user_by_chat_id(self, chat_id):
         c = self.connection.cursor()
-        c.execute('SELECT id, timepadId FROM users WHERE chatId = ?', (chat_id,))
+        c.execute('SELECT id, timepadId, token FROM users WHERE chatId = ?', (chat_id,))
         result = c.fetchone()
         if result is not None:
             return {
                 'id': result[0],
-                'timepadId': result[1]
+                'timepadId': result[1],
+                'token': result[2]
             }
         return None
 
@@ -99,14 +100,15 @@ class Connector:
     def set_city(self, user_id, city_name):
         c = self.connection.cursor()
         c.execute('UPDATE users SET cityName = ? WHERE id = ?', (city_name, user_id))
-        print(city_name, 'set', user_id)
         self.connection.commit()
 
     def get_city(self, user_id):
         c = self.connection.cursor()
         c.execute('SELECT cityName FROM users WHERE id = ?', (user_id,))
-        city = map(lambda row: row[0], c.fetchall())
-        return ' '.join(list(city))
+        city = list(map(lambda row: row[0], c.fetchall()))
+        if city[0] is None:
+            city = ['']
+        return ' '.join(city)
 
     def set_introspect_timestamp(self, user_id, ts):
         c = self.connection.cursor()

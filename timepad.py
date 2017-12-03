@@ -3,7 +3,6 @@ import logging
 import json
 import datetime
 
-TIMEPAD_TOKEN = '97dabe0642c19a62ace6b2321a3725cc2b71a183'
 API_URL = 'https://api.timepad.ru'
 
 
@@ -65,6 +64,7 @@ def format_event_descr(event):
     return event_repr
 
 def get_events(params):
+    logging.info(params)
     response = requests.get(API_URL + '/v1/events', params=params)
     if response.status_code != requests.codes.ok:
         logging.warning('Got non-200 response from API: {}'.format(str(response.status_code)))

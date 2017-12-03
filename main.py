@@ -10,7 +10,7 @@ import json
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
                     level=logging.INFO)
 
-MAX_EVENTS_IN_MSG = 10
+MAX_EVENTS_IN_MSG = 3
 
 user_last_queries = {}
 
@@ -65,17 +65,17 @@ def set_token(bot, update, args):
 
 
 def get_events_by_params(bot, update, parameters_input={}):
-    # print(parameters_input)
+    logging.info(parameters_input)
     try:
         min_index, parameters = user_last_queries[update.message.chat_id]
     except KeyError:
         min_index, parameters = 0, parameters_input
         user_last_queries[update.message.chat_id] = (min_index, parameters_input)
-
+    logging.info(parameters)
     parameters["skip"] = min_index
     events = timepad.get_events(parameters)
     if len(events) - min_index > MAX_EVENTS_IN_MSG:
-        kb = [[ telegram.InlineKeyboardButton("Да, ещё!", callback_data="ещё") ]]
+        kb = [[ telegram.InlineKeyboardButton("Да, ещё!", callback_data="more") ]]
         kb_markup = telegram.InlineKeyboardMarkup(kb)
         bot.send_message(chat_id=update.message.chat_id, text="\n".join(events[:MAX_EVENTS_IN_MSG]), parse_mode='Markdown')
         left = len(events) - MAX_EVENTS_IN_MSG - min_index
@@ -96,6 +96,7 @@ def echo(bot, update):
 def error_callback(bot, update, error):
     logging.warning(repr(error))
 
+@has_token
 def set_city(bot, update, args):
     connector = database.Connector()
     user = connector.get_user_by_chat_id(update.message.chat_id)
@@ -178,18 +179,23 @@ def subscribe(bot, update, args):
     bot.send_message(chat_id=update.message.chat_id, text='Подписано')
 
 
-@has_token
 def button_more_callback(bot, update):
     query = update.callback_query
     parameters = { 'access_statuses': "public",
                     'limit': 100 }
     update.message = query.message
     connector = database.Connector()
-    user = connector.get_user_by_chat_id(update.message.chat_id)
-    if "ещё" in query.data:
+    user = connector.get_user_by_chat_id(update.message.chat.id)
+    logging.info(user)
+    if "more" in query.data:
         get_events_by_params(bot, update)
         return
+    else:
+        user_last_queries.clear()
     if "local" in query.data:
+        if 'token' not in user:
+            bot.send_message(chat_id=update.message.chat_id, text='Сначала установи токен')
+            return
         city = connector.get_city(user['id'])
         if len(city) > 0:
             parameters['cities'] = city
@@ -198,6 +204,9 @@ def button_more_callback(bot, update):
         parameters['starts_at_min'] = date + "T00:00:00+0300"
         parameters['starts_at_max'] = date + "T23:59:59+0300"
     if "my" in query.data:
+        if 'token' not in user:
+            bot.send_message(chat_id=update.message.chat_id, text='Сначала установи токен')
+            return
         my_token = user['token']
         response = requests.get(timepad.API_URL + '/introspect?token={0}'.format(my_token))
         user_info = json.loads(response.text)
