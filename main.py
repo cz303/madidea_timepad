@@ -23,13 +23,18 @@ def start(bot, update):
                      text="Великолепный бот\nСписок всех команд: /help\nПолучить токен: "
                           "https://dev.timepad.ru/api/oauth/")
 
+def check_token(bot, update, user):
+    if user['token'] is None:
+        bot.send_message(chat_id=update.message.chat_id, text='Сначала установи токен: /token <Timepad token>')
+        return False
+    else:
+        return True
 
 def has_token(func):
     def func_wrapper(bot, update, *args, **kwargs):
         connector = database.Connector()
         user = connector.get_user_by_chat_id(update.message.chat_id)
-        if user['timepadId'] is None:
-            bot.send_message(chat_id=update.message.chat_id, text='Сначала установи токен')
+        if not check_token(bot, update, user):
             return
         func(bot, update, *args, **kwargs)
 
@@ -194,8 +199,7 @@ def button_more_callback(bot, update):
     else:
         user_last_queries.clear()
     if "local" in query.data:
-        if user['token'] is None:
-            bot.send_message(chat_id=update.message.chat_id, text='Сначала установи токен')
+        if not check_token(bot, update, user):
             return
         city = connector.get_city(user['id'])
         if len(city) > 0:
@@ -205,8 +209,7 @@ def button_more_callback(bot, update):
         parameters['starts_at_min'] = date + "T00:00:00+0300"
         parameters['starts_at_max'] = date + "T23:59:59+0300"
     if "my" in query.data:
-        if user['token'] is None:
-            bot.send_message(chat_id=update.message.chat_id, text='Сначала установи токен')
+        if not check_token(bot, update, user):
             return
         my_token = user['token']
         response = requests.get(timepad.API_URL + '/introspect?token={0}'.format(my_token))
