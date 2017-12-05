@@ -19,6 +19,8 @@ Just ~~ask~~ build this TimePad bot.
 
 <img src="./img/help.png">
 
+<img src="./img/subscribed.png">
+
 <img src="./img/events.png">
 
 ## Prerequisites
