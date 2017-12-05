@@ -1,9 +1,8 @@
-<<<<<<< Updated upstream
 # Madidea TimePad Bot
 
 Madidea TimePad Bot is a Telegram bot that tracks public events (concerts, talks etc.) and prevents you from boredom.
 
-<img align="right" width="120" height="178" alt="Size Limit logo" src="https://github.com/timepad/logo/blob/master/svg/mini-logo-timepad-with-background-2.svg">
+<img align="right" width="120" height="178" alt="TimePad logo" src="https://github.com/timepad/logo/blob/master/svg/mini-logo-timepad-with-background-2.svg">
      
 Integrated with [TimePad](https://welcome.timepad.ru/) API, it allows you to:
 
@@ -16,7 +15,24 @@ What to do this weekend?
 
 Just ~~ask~~ build this TimePad bot.
 
+## How it works?
+
+<img src="./img/help.png">
+
+<img src="./img/events.png">
+
 ## Prerequisites
+
+To build and run the bot, you will need:
+
+* ```python3```
+* ```sqlite```
+* ```python3 -m pip install -r requirements.txt```
+* Register your bot at the [@BotFather](https://web.telegram.org/#/im?p=@BotFather)
+
+To use the bot, you might need:
+
+* (optional) Have an account on [TimePad](https://welcome.timepad.ru/) and get your personal token [here](http://dev.timepad.ru/api/oauth/)
 
 ## Usage 
 
