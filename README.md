@@ -1,3 +1,4 @@
+<<<<<<< Updated upstream
 # Madidea TimePad Bot
 
 Madidea TimePad Bot is a Telegram bot that tracks public events (concerts, talks etc.) and prevents you from boredom.
